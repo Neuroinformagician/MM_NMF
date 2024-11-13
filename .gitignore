@@ -1,2 +1,9 @@
-# data フォルダを無視
-data/
+*.log           # すべてのログファイル
+*.tmp           # 一時ファイル
+*.DS_Store      # macOSシステムファイル
+
+data/           # data フォルダ全体
+cache/          # キャッシュフォルダ
+
+*.tiff
+fig/
