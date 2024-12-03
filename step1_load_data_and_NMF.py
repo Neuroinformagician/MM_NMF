@@ -51,20 +51,20 @@ df_ori = load_data(config["filepath"])
 if df_ori is not None:
     df = select_columns(df_ori, df_names)
 
-numeric_columns = df.select_dtypes(include='number')
+numeric_columns = df.select_dtypes(include="number")
 scaler = MinMaxScaler()
 scaled_columns = scaler.fit_transform(numeric_columns)
 
 scaled_df = df.copy()
 scaled_df[numeric_columns.columns] = scaled_columns
 
-nmf = NMF(n_components=4, init='nndsvd', max_iter=200, random_state=0)
+nmf = NMF(n_components=4, init="nndsvd", max_iter=200, random_state=0)
 
 W = nmf.fit_transform(scaled_df)
 H = nmf.components_
 
 
-def cluster_data(matrix, method='complete', metric='euclidean'):
+def cluster_data(matrix, method="complete", metric="euclidean"):
     cluster_rows = linkage(matrix, method=method, metric=metric)
     return leaves_list(cluster_rows)
 
@@ -80,31 +80,31 @@ feature_names_reordered = feature_names[col_order]
 module_names = ["module QOL", "module Diplopia", "module Ptosis", "module Systemic"]
 module_names_reordered = [module_names[i] for i in row_order]
 
-IDs = df_ori['ID']
+IDs = df_ori["ID"]
 W_with_id = np.column_stack((IDs, W))
-module_names_with_id = ['ID'] + module_names_reordered
+module_names_with_id = ["ID"] + module_names_reordered
 W_with_id_df = pd.DataFrame(W_with_id, columns=module_names_with_id)
 
-module_names_with_id = ['ID', "module QOL", "module Diplopia", "module Ptosis", "module Systemic"]
+module_names_with_id = ["ID", "module QOL", "module Diplopia", "module Ptosis", "module Systemic"]
 
 W_with_id_df = pd.DataFrame(W_with_id, columns=module_names_with_id)
 MM_data = df_ori[["ID", "MMorbetter"]]
 
 W_MM = pd.merge(W_with_id_df, MM_data, on="ID")
-W_MM.index = W_MM['ID']
-W_MM.drop(columns=['ID'], inplace=True)
+W_MM.index = W_MM["ID"]
+W_MM.drop(columns=["ID"], inplace=True)
 
-with open('./out/nmf_model.pkl', 'wb') as file:
+with open("./out/nmf_model.pkl", "wb") as file:
     pickle.dump(nmf, file)
 
-with open('./out/W_matrix.pkl', 'wb') as file:
+with open("./out/W_matrix.pkl", "wb") as file:
     pickle.dump(W, file)
 
-with open('./out/H_matrix.pkl', 'wb') as file:
+with open("./out/H_matrix.pkl", "wb") as file:
     pickle.dump(H, file)
 
-with open('./out/W_with_id_df.pkl', 'wb') as file:
+with open("./out/W_with_id_df.pkl", "wb") as file:
     pickle.dump(W_with_id_df, file)
 
-with open('./out/W_MM.pkl', 'wb') as file:
+with open("./out/W_MM.pkl", "wb") as file:
     pickle.dump(W_MM, file)
