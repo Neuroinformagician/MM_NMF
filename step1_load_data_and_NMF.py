@@ -84,10 +84,6 @@ IDs = df_ori["ID"]
 W_with_id = np.column_stack((IDs, W))
 module_names_with_id = ["ID"] + module_names_reordered
 W_with_id_df = pd.DataFrame(W_with_id, columns=module_names_with_id)
-
-module_names_with_id = ["ID", "module QOL", "module Diplopia", "module Ptosis", "module Systemic"]
-
-W_with_id_df = pd.DataFrame(W_with_id, columns=module_names_with_id)
 MM_data = df_ori[["ID", "MMorbetter"]]
 
 W_MM = pd.merge(W_with_id_df, MM_data, on="ID")
