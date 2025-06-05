@@ -191,7 +191,7 @@ model_files = {
     "SVM": "./out/mean_roc_data_SVM.csv",
     "Logistic Regression": "./out/mean_roc_data_Logistic Regression.csv",
     "Random Forest": "./out/mean_roc_data_Random Forest.csv",
-    "GaussianNB": "./out/mean_roc_data_Naive Bayes.csv"
+    "Naive Bayes": "./out/mean_roc_data_Naive Bayes.csv"
 }
 
 optimal_cutoffs = {}
