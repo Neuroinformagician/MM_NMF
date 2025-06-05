@@ -97,6 +97,16 @@ param_grids = {
     }
 }
 
+# Map verbose model names to the corresponding parameter grids. Without this
+# mapping the GridSearchCV for "Logistic Regression" and "Random Forest" would
+# receive an empty parameter grid, because their keys in ``param_grids`` use
+# abbreviated names.
+param_grids_by_name = {
+    "SVM": param_grids["svm"],
+    "Logistic Regression": param_grids["logreg"],
+    "Random Forest": param_grids["rf"],
+}
+
 best_params_list = []  
 best_scores_list = []  
 predicted_probs_list = {
@@ -122,7 +132,7 @@ for X_train, y_train, X_test, y_test in zip(X_train_list, y_train_list, X_test_l
         if model_name != "Naive Bayes":
             grid_search = GridSearchCV(
                 estimator=model,
-                param_grid=param_grids.get(model_name.lower(), {}),
+                param_grid=param_grids_by_name.get(model_name, {}),
                 cv=5,
                 scoring="accuracy",
                 n_jobs=-1
