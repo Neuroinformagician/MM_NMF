@@ -97,6 +97,13 @@ param_grids = {
     }
 }
 
+# Mapping from displayed model names to the keys used in ``param_grids``
+grid_key = {
+    "SVM": "svm",
+    "Logistic Regression": "logreg",
+    "Random Forest": "rf"
+}
+
 best_params_list = []  
 best_scores_list = []  
 predicted_probs_list = {
@@ -120,9 +127,11 @@ for X_train, y_train, X_test, y_test in zip(X_train_list, y_train_list, X_test_l
     
     for model_name, model in models.items():
         if model_name != "Naive Bayes":
+            key = grid_key.get(model_name)
+            assert key is not None, f"Missing grid key for {model_name}"
             grid_search = GridSearchCV(
                 estimator=model,
-                param_grid=param_grids.get(model_name.lower(), {}),
+                param_grid=param_grids[key],
                 cv=5,
                 scoring="accuracy",
                 n_jobs=-1
