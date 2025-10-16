@@ -104,6 +104,23 @@ st.markdown("""
         color: #007aff;
     }
 
+    /* 項目コンテナ */
+    .item-container {
+        background: white;
+        border-radius: 12px;
+        padding: 12px;
+        margin-bottom: 12px;
+        border: 1px solid #e5e5ea;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
+
+    /* 項目セパレータ */
+    .item-separator {
+        height: 1px;
+        background: linear-gradient(to right, transparent, #e5e5ea, transparent);
+        margin: 16px 0;
+    }
+
     /* スコアボタン */
     div.stButton > button {
         width: 100%;
@@ -319,30 +336,41 @@ st.markdown("---")
 if st.session_state.current_scale == 0:
     st.header("MG-ADL (0-24点)")
 
-    # 各項目のスコア入力（iOS風タップUIで）
-    for item in MGADL_ITEMS:
+    # 各項目のスコア入力（項目ごとにコンテナで囲む）
+    for idx, item in enumerate(MGADL_ITEMS):
         key = f"adl_{item['key']}"
         current_score = get_score(key)
 
-        col1, col2, col3, col4, col5 = st.columns([3, 1, 1, 1, 1])
+        # 項目コンテナ開始
+        st.markdown('<div class="item-container">', unsafe_allow_html=True)
 
-        with col1:
-            marker = " (→MGC自動反映)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-            st.markdown(f"**{item['name']}{marker}**")
+        # コンテナ内でカラム配置
+        with st.container():
+            col1, col2, col3, col4, col5 = st.columns([3, 1, 1, 1, 1])
 
-        # スコアボタン
-        for i, col in enumerate([col2, col3, col4, col5]):
-            with col:
-                if st.button(
-                    str(i),
-                    key=f"{key}_{i}",
-                    type="primary" if current_score == i else "secondary",
-                    use_container_width=True
-                ):
-                    set_score(key, i)
-                    if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
-                        sync_adl_to_mgc()
-                    st.rerun()
+            with col1:
+                marker = " (→MGC自動反映)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+                st.markdown(f"**{item['name']}{marker}**")
+
+            # スコアボタン
+            for i, col in enumerate([col2, col3, col4, col5]):
+                with col:
+                    if st.button(
+                        str(i),
+                        key=f"{key}_{i}",
+                        type="primary" if current_score == i else "secondary",
+                        use_container_width=True
+                    ):
+                        set_score(key, i)
+                        if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
+                            sync_adl_to_mgc()
+                        st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # 最後の項目以外はセパレータを追加
+        if idx < len(MGADL_ITEMS) - 1:
+            st.markdown('<div class="item-separator"></div>', unsafe_allow_html=True)
 
     # 合計点
     total = calculate_total(MGADL_ITEMS, 'adl')
@@ -361,29 +389,41 @@ if st.session_state.current_scale == 0:
 elif st.session_state.current_scale == 1:
     st.header("MG Composite (0-50点)")
 
-    # 各項目のスコア入力
-    for item in MGC_ITEMS:
+    # 各項目のスコア入力（項目ごとにコンテナで囲む）
+    for idx, item in enumerate(MGC_ITEMS):
         key = f"mgc_{item['key']}"
         current_score = get_score(key)
 
-        marker = " (ADLから自動)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-        desc = f" - {item['description']}" if item.get('description') else ""
-        st.markdown(f"**{item['name']}{marker}**{desc}")
+        # 項目コンテナ開始
+        st.markdown('<div class="item-container">', unsafe_allow_html=True)
 
-        # 値の数に応じてカラムを作成
-        values = item['values']
-        cols = st.columns(len(values))
+        with st.container():
+            marker = " (ADLから自動)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+            desc = f" - {item['description']}" if item.get('description') else ""
+            st.markdown(f"**{item['name']}{marker}**")
+            if desc:
+                st.caption(item['description'])
 
-        for i, (col, val) in enumerate(zip(cols, values)):
-            with col:
-                if st.button(
-                    str(val),
-                    key=f"{key}_{i}",
-                    type="primary" if current_score == i else "secondary",
-                    use_container_width=True
-                ):
-                    set_score(key, i)
-                    st.rerun()
+            # 値の数に応じてカラムを作成
+            values = item['values']
+            cols = st.columns(len(values))
+
+            for i, (col, val) in enumerate(zip(cols, values)):
+                with col:
+                    if st.button(
+                        str(val),
+                        key=f"{key}_{i}",
+                        type="primary" if current_score == i else "secondary",
+                        use_container_width=True
+                    ):
+                        set_score(key, i)
+                        st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # 最後の項目以外はセパレータを追加
+        if idx < len(MGC_ITEMS) - 1:
+            st.markdown('<div class="item-separator"></div>', unsafe_allow_html=True)
 
     # 合計点
     total = calculate_total(MGC_ITEMS, 'mgc')
@@ -405,27 +445,37 @@ elif st.session_state.current_scale == 1:
 elif st.session_state.current_scale == 2:
     st.header("MGQOL-15r (0-30点)")
 
-    # 各項目のスコア入力
-    for item in MGQOL_ITEMS:
+    # 各項目のスコア入力（項目ごとにコンテナで囲む）
+    for idx, item in enumerate(MGQOL_ITEMS):
         key = f"mgqol_{item['key']}"
         current_score = get_score(key)
 
-        col1, col2, col3, col4 = st.columns([4, 1, 1, 1])
+        # 項目コンテナ開始
+        st.markdown('<div class="item-container">', unsafe_allow_html=True)
 
-        with col1:
-            st.markdown(f"**{item['name']}**")
+        with st.container():
+            col1, col2, col3, col4 = st.columns([4, 1, 1, 1])
 
-        # スコアボタン（0-2）
-        for i, col in enumerate([col2, col3, col4]):
-            with col:
-                if st.button(
-                    str(i),
-                    key=f"{key}_{i}",
-                    type="primary" if current_score == i else "secondary",
-                    use_container_width=True
-                ):
-                    set_score(key, i)
-                    st.rerun()
+            with col1:
+                st.markdown(f"**{idx + 1}. {item['name']}**")
+
+            # スコアボタン（0-2）
+            for i, col in enumerate([col2, col3, col4]):
+                with col:
+                    if st.button(
+                        str(i),
+                        key=f"{key}_{i}",
+                        type="primary" if current_score == i else "secondary",
+                        use_container_width=True
+                    ):
+                        set_score(key, i)
+                        st.rerun()
+
+        st.markdown('</div>', unsafe_allow_html=True)
+
+        # 最後の項目以外はセパレータを追加
+        if idx < len(MGQOL_ITEMS) - 1:
+            st.markdown('<div class="item-separator"></div>', unsafe_allow_html=True)
 
     # 合計点
     total = calculate_total(MGQOL_ITEMS, 'mgqol')
