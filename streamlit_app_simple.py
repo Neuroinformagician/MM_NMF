@@ -92,29 +92,57 @@ st.markdown("""
         font-size: 1.1em;
         margin-bottom: 10px;
     }
+
+    /* タップ時の即座のフィードバック */
+    div.stButton > button:active {
+        opacity: 0.7;
+    }
 </style>
 
 <script>
-    // スクロール位置を保存・復元（rerun時に一番上に戻るのを防ぐ）
+    // スクロール制御
+    let shouldPreserveScroll = true;
+
+    // ボタンクリック時のスクロール位置を保存
     window.addEventListener('beforeunload', function() {
-        sessionStorage.setItem('scrollPosition', window.scrollY);
-    });
-
-    window.addEventListener('load', function() {
-        const scrollPosition = sessionStorage.getItem('scrollPosition');
-        if (scrollPosition !== null) {
-            window.scrollTo(0, parseInt(scrollPosition));
+        if (shouldPreserveScroll) {
+            sessionStorage.setItem('scrollPosition', window.scrollY);
         }
     });
 
-    // Streamlit rerun時にもスクロール位置を保持
+    // Streamlit rerun時のスクロール制御
     const observer = new MutationObserver(function() {
-        const scrollPosition = sessionStorage.getItem('scrollPosition');
-        if (scrollPosition !== null) {
-            setTimeout(function() {
-                window.scrollTo(0, parseInt(scrollPosition));
-            }, 100);
-        }
+        // scroll_actionがあるか確認（Streamlitのセッションステートから）
+        const stateElements = document.querySelectorAll('[data-testid]');
+        let scrollAction = null;
+
+        stateElements.forEach(el => {
+            if (el.textContent.includes('SCROLL_TO_TOP')) {
+                scrollAction = 'top';
+            } else if (el.textContent.includes('SCROLL_TO_RESULTS')) {
+                scrollAction = 'results';
+            }
+        });
+
+        setTimeout(function() {
+            if (scrollAction === 'top') {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+                sessionStorage.removeItem('scrollPosition');
+            } else if (scrollAction === 'results') {
+                // 予測結果まで自動スクロール（IDを探す）
+                const resultsElement = document.getElementById('prediction-results');
+                if (resultsElement) {
+                    resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+                sessionStorage.removeItem('scrollPosition');
+            } else {
+                // 通常はスクロール位置を保持（スコアボタンクリック時）
+                const scrollPosition = sessionStorage.getItem('scrollPosition');
+                if (scrollPosition !== null) {
+                    window.scrollTo(0, parseInt(scrollPosition));
+                }
+            }
+        }, 150);
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
@@ -133,6 +161,9 @@ if 'prediction_results' not in st.session_state:
 
 if 'predictor' not in st.session_state:
     st.session_state.predictor = None
+
+if 'scroll_action' not in st.session_state:
+    st.session_state.scroll_action = None  # 'top', 'results', None
 
 # ============================================================================
 # ヘルパー関数
@@ -192,12 +223,14 @@ def next_scale():
     """次のスケールに進む"""
     if st.session_state.current_scale < 2:
         st.session_state.current_scale += 1
+        st.session_state.scroll_action = 'top'
         st.rerun()
 
 def prev_scale():
     """前のスケールに戻る"""
     if st.session_state.current_scale > 0:
         st.session_state.current_scale -= 1
+        st.session_state.scroll_action = 'top'
         st.rerun()
 
 def go_to_scale(scale_index):
@@ -380,8 +413,10 @@ if 'predict_btn' in locals() and predict_btn:
                 **results,
                 "comparison": comparison
             }
+            st.session_state.scroll_action = 'results'
 
             st.success("✅ 予測完了！")
+            st.rerun()
 
         except FileNotFoundError as e:
             st.error(f"❌ ファイルエラー: {e}")
@@ -396,7 +431,16 @@ if 'predict_btn' in locals() and predict_btn:
 if st.session_state.prediction_results is not None:
     results = st.session_state.prediction_results
 
+    # スクロールマーカー（JavaScriptが検知用）
+    if st.session_state.scroll_action == 'top':
+        st.markdown('<div style="display:none">SCROLL_TO_TOP</div>', unsafe_allow_html=True)
+        st.session_state.scroll_action = None
+    elif st.session_state.scroll_action == 'results':
+        st.markdown('<div style="display:none">SCROLL_TO_RESULTS</div>', unsafe_allow_html=True)
+        st.session_state.scroll_action = None
+
     st.markdown("---")
+    st.markdown('<div id="prediction-results"></div>', unsafe_allow_html=True)
 
     # 予測結果表示（目立つように）
     ensemble_prob = results['ensemble']

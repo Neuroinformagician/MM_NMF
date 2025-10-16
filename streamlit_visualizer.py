@@ -122,8 +122,8 @@ def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensembl
             bordercolor='black',
             borderwidth=1
         ),
-        height=700,
-        margin=dict(l=80, r=80, t=80, b=120)
+        height=900,
+        margin=dict(l=100, r=100, t=100, b=150)
     )
 
     return fig
