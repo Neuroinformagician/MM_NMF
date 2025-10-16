@@ -148,28 +148,60 @@ st.markdown("""
         color: white !important;
     }
 
-    /* プライマリボタン */
+    /* プライマリボタン - 選択状態 */
     div.stButton > button[kind="primary"] {
-        background: #007aff;
-        color: white;
+        height: 48px;
+        font-size: 1rem;
+        font-weight: 600;
         border: none;
-        height: 48px;
-        font-size: 1rem;
-        font-weight: 600;
     }
 
-    div.stButton > button[kind="primary"]:hover {
-        background: #0051d5;
+    /* ADL選択ボタン（青） */
+    .adl-section div.stButton > button[kind="primary"] {
+        background: #007aff !important;
+        color: white !important;
+        border: 2px solid #007aff !important;
     }
 
-    /* セカンダリボタン */
+    .adl-section div.stButton > button[kind="primary"]:hover {
+        background: #0051d5 !important;
+    }
+
+    /* MGC選択ボタン（緑） */
+    .mgc-section div.stButton > button[kind="primary"] {
+        background: #34c759 !important;
+        color: white !important;
+        border: 2px solid #34c759 !important;
+    }
+
+    .mgc-section div.stButton > button[kind="primary"]:hover {
+        background: #28a745 !important;
+    }
+
+    /* MGQOL選択ボタン（紫） */
+    .mgqol-section div.stButton > button[kind="primary"] {
+        background: #af52de !important;
+        color: white !important;
+        border: 2px solid #af52de !important;
+    }
+
+    .mgqol-section div.stButton > button[kind="primary"]:hover {
+        background: #9437c3 !important;
+    }
+
+    /* セカンダリボタン - 未選択状態 */
     div.stButton > button[kind="secondary"] {
-        background: #f0f0f0;
-        color: #333;
-        border: 1px solid #ddd;
+        background: white;
+        color: #666;
+        border: 2px solid #e5e5ea;
         height: 48px;
         font-size: 1rem;
         font-weight: 600;
+    }
+
+    div.stButton > button[kind="secondary"]:hover {
+        background: #f5f5f5;
+        border-color: #ccc;
     }
 
     /* 合計表示 */
@@ -336,6 +368,9 @@ st.markdown("---")
 if st.session_state.current_scale == 0:
     st.header("MG-ADL (0-24点)")
 
+    # ADLセクション開始（色分け用）
+    st.markdown('<div class="adl-section">', unsafe_allow_html=True)
+
     # 各項目のスコア入力（項目ごとにコンテナで囲む）
     for idx, item in enumerate(MGADL_ITEMS):
         key = f"adl_{item['key']}"
@@ -372,6 +407,9 @@ if st.session_state.current_scale == 0:
         if idx < len(MGADL_ITEMS) - 1:
             st.markdown('<div class="item-separator"></div>', unsafe_allow_html=True)
 
+    # ADLセクション終了
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # 合計点
     total = calculate_total(MGADL_ITEMS, 'adl')
     st.info(f"**合計: {total}/24点**")
@@ -388,6 +426,9 @@ if st.session_state.current_scale == 0:
 
 elif st.session_state.current_scale == 1:
     st.header("MG Composite (0-50点)")
+
+    # MGCセクション開始（色分け用）
+    st.markdown('<div class="mgc-section">', unsafe_allow_html=True)
 
     # 各項目のスコア入力（項目ごとにコンテナで囲む）
     for idx, item in enumerate(MGC_ITEMS):
@@ -425,6 +466,9 @@ elif st.session_state.current_scale == 1:
         if idx < len(MGC_ITEMS) - 1:
             st.markdown('<div class="item-separator"></div>', unsafe_allow_html=True)
 
+    # MGCセクション終了
+    st.markdown('</div>', unsafe_allow_html=True)
+
     # 合計点
     total = calculate_total(MGC_ITEMS, 'mgc')
     st.success(f"**合計: {total}/50点**")
@@ -444,6 +488,9 @@ elif st.session_state.current_scale == 1:
 
 elif st.session_state.current_scale == 2:
     st.header("MGQOL-15r (0-30点)")
+
+    # MGQOLセクション開始（色分け用）
+    st.markdown('<div class="mgqol-section">', unsafe_allow_html=True)
 
     # 各項目のスコア入力（項目ごとにコンテナで囲む）
     for idx, item in enumerate(MGQOL_ITEMS):
@@ -476,6 +523,9 @@ elif st.session_state.current_scale == 2:
         # 最後の項目以外はセパレータを追加
         if idx < len(MGQOL_ITEMS) - 1:
             st.markdown('<div class="item-separator"></div>', unsafe_allow_html=True)
+
+    # MGQOLセクション終了
+    st.markdown('</div>', unsafe_allow_html=True)
 
     # 合計点
     total = calculate_total(MGQOL_ITEMS, 'mgqol')
