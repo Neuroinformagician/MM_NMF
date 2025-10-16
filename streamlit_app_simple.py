@@ -46,7 +46,7 @@ if 'current_scale' not in st.session_state:
 current_scale = st.session_state.current_scale
 
 # カスタムCSS
-st.markdown(f"""
+st.markdown("""
 <style>
     /* 基本設定 */
     * {
@@ -289,19 +289,19 @@ st.markdown(f"""
     window.scrollTo(0, 0);
 
     // Pythonから直接現在のスケール値を埋め込む
-    const currentScale = {current_scale};
+    const currentScale = """ + str(current_scale) + """;
 
     // bodyタグにdata-scale属性を設定
-    function setScaleAttribute() {{
+    function setScaleAttribute() {
         document.body.setAttribute('data-scale', currentScale);
-    }}
+    }
 
     // DOMが読み込まれたら実行
-    if (document.body) {{
+    if (document.body) {
         setScaleAttribute();
-    }} else {{
+    } else {
         document.addEventListener('DOMContentLoaded', setScaleAttribute);
-    }}
+    }
 
     // 念のため遅延実行も追加
     setTimeout(setScaleAttribute, 100);
