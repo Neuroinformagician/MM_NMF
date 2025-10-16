@@ -46,7 +46,7 @@ st.markdown("""
     }
 
     div.stButton > button:active {
-        animation: jiggle 0.5s ease-in-out;
+        animation: jiggle 1s ease-in-out;
     }
 
     /* 小刻みに縮小拡大アニメーション */
@@ -345,17 +345,14 @@ if st.session_state.current_scale == 0:
         max_val = len(item['options']) - 1  # 0-3なので、4つのオプション - 1
 
         with cols[i % 2]:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                # 自動反映される項目には印をつける
-                marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-                st.markdown(f"**{item['name']}{marker}**")
-            with col2:
-                if st.button(f"{get_score(key)}", key=f"btn_{key}", use_container_width=True):
-                    increment_score(key, max_val)
-                    # 自動的にMGCに反映
-                    sync_adl_to_mgc()
-                    st.rerun()
+            # 自動反映される項目には印をつける
+            marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+            st.markdown(f"**{item['name']}{marker}**")
+            if st.button(f"スコア: {get_score(key)}", key=f"btn_{key}", use_container_width=True):
+                increment_score(key, max_val)
+                # 自動的にMGCに反映
+                sync_adl_to_mgc()
+                st.rerun()
 
     st.markdown(f"**合計: {calculate_total(MGADL_ITEMS, 'adl')}/24**")
     st.caption("⚡印の項目はMG Compositeに自動反映されます")
@@ -382,17 +379,14 @@ elif st.session_state.current_scale == 1:
         max_val = len(item['values']) - 1  # values配列のインデックス最大値
 
         with cols[i % 2]:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-                st.markdown(f"**{item['name']}{marker}**")
-            with col2:
-                # 現在のインデックスを取得して、実際の点数を表示
-                current_index = get_score(key)
-                actual_score = item['values'][current_index]
-                if st.button(f"{actual_score}", key=f"btn_{key}", use_container_width=True):
-                    increment_score(key, max_val)
-                    st.rerun()
+            marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+            st.markdown(f"**{item['name']}{marker}**")
+            # 現在のインデックスを取得して、実際の点数を表示
+            current_index = get_score(key)
+            actual_score = item['values'][current_index]
+            if st.button(f"スコア: {actual_score}", key=f"btn_{key}", use_container_width=True):
+                increment_score(key, max_val)
+                st.rerun()
 
     st.markdown(f"**合計: {calculate_total(MGC_ITEMS, 'mgc')}/50**")
     st.caption("⚡印の項目はMG-ADLから自動反映されます")
@@ -422,13 +416,10 @@ elif st.session_state.current_scale == 2:
         max_val = 2  # MGQOLは全て0-2点
 
         with cols[i % 2]:
-            col1, col2 = st.columns([3, 1])
-            with col1:
-                st.markdown(f"**{item['name']}**")
-            with col2:
-                if st.button(f"{get_score(key)}", key=f"btn_{key}", use_container_width=True):
-                    increment_score(key, max_val)
-                    st.rerun()
+            st.markdown(f"**{item['name']}**")
+            if st.button(f"スコア: {get_score(key)}", key=f"btn_{key}", use_container_width=True):
+                increment_score(key, max_val)
+                st.rerun()
 
     st.markdown(f"**合計: {calculate_total(MGQOL_ITEMS, 'mgqol')}/30**")
 
