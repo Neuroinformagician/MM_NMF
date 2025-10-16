@@ -25,193 +25,131 @@ st.set_page_config(
     layout="wide"
 )
 
-# カスタムCSSでモバイル対応とボタンエフェクトを追加
+# カスタムCSS - iOS風デザイン
 st.markdown("""
 <style>
-    /* モバイル対応: ボタンを大きく + プルプルエフェクト */
-    div.stButton > button {
-        transition: transform 0.1s ease;
-        position: relative;
-        overflow: visible;
-        min-height: 60px;
-        font-size: 1.3em;
+    /* iOS風デザイン */
+    @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap');
+
+    body {
+        font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+        background-color: #f2f2f7;
+    }
+
+    /* 全体のコンテナ */
+    .main .block-container {
+        max-width: 800px;
+        padding-top: 1rem;
+        padding-bottom: 1rem;
+    }
+
+    /* ヘッダー */
+    h1, h2, h3 {
         font-weight: 600;
-        padding: 15px 20px;
+        color: #1c1c1e;
+    }
+
+    /* 進捗インジケーター */
+    .stMarkdown {
+        margin-bottom: 0.5rem;
+    }
+
+    /* スコアボタングループのスタイル */
+    div.stButton {
+        margin: 0;
+        padding: 0;
+    }
+
+    div.stButton > button {
         width: 100%;
+        height: 60px;
+        font-size: 1.2em;
+        font-weight: 600;
+        border-radius: 10px;
+        border: 2px solid #e5e5ea;
+        background-color: white;
+        color: #1c1c1e;
+        transition: all 0.2s ease;
+        margin: 2px;
     }
 
     div.stButton > button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+        background-color: #f2f2f7;
+        border-color: #007aff;
     }
 
-    div.stButton > button:active {
-        animation: jiggle 1s ease-in-out;
+    /* 選択されたボタン（data-baseweb属性を使って判定） */
+    div.stButton > button[kind="secondary"] {
+        background-color: white;
+        border-color: #e5e5ea;
+        color: #1c1c1e;
     }
 
-    /* 小刻みに縮小拡大アニメーション */
-    @keyframes jiggle {
-        0% { transform: scale(1); }
-        5% { transform: scale(0.95); }
-        10% { transform: scale(1.02); }
-        15% { transform: scale(0.97); }
-        20% { transform: scale(1.04); }
-        25% { transform: scale(0.98); }
-        30% { transform: scale(1.06); }
-        35% { transform: scale(0.99); }
-        40% { transform: scale(1.08); }
-        45% { transform: scale(1.0); }
-        50% { transform: scale(1.1); }
-        55% { transform: scale(1.01); }
-        60% { transform: scale(1.11); }
-        65% { transform: scale(1.02); }
-        70% { transform: scale(1.12); }
-        75% { transform: scale(1.03); }
-        80% { transform: scale(1.1); }
-        85% { transform: scale(1.02); }
-        90% { transform: scale(1.05); }
-        95% { transform: scale(1.01); }
-        100% { transform: scale(1); }
-    }
-
-    /* ボタンクリック時の波紋エフェクト */
-    @keyframes ripple {
-        0% {
-            transform: scale(0);
-            opacity: 0.6;
-        }
-        100% {
-            transform: scale(4);
-            opacity: 0;
-        }
-    }
-
-    div.stButton > button:active::after {
-        content: "";
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        width: 20px;
-        height: 20px;
-        background: rgba(255, 255, 255, 0.5);
-        border-radius: 50%;
-        transform: translate(-50%, -50%);
-        animation: ripple 0.6s ease-out;
-    }
-
-    /* プライマリボタン（予測実行）を目立たせる */
+    /* プライマリボタン（選択済み） */
     div.stButton > button[kind="primary"] {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-color: #007aff;
+        border-color: #007aff;
+        color: white;
         font-weight: 700;
-        font-size: 1.4em;
-        min-height: 70px;
     }
 
-    div.stButton > button[kind="primary"]:hover {
-        background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
+    /* MGC用の緑色 */
+    .mgc-selected button[kind="primary"] {
+        background-color: #34c759 !important;
+        border-color: #34c759 !important;
     }
 
-    /* モバイル: 項目名のフォントサイズ調整 */
-    .stMarkdown h4 {
+    /* MGQOL用の紫色 */
+    .mgqol-selected button[kind="primary"] {
+        background-color: #af52de !important;
+        border-color: #af52de !important;
+    }
+
+    /* 項目ラベル */
+    .item-label {
+        font-weight: 600;
         font-size: 1.1em;
-        margin-bottom: 10px;
+        color: #1c1c1e;
+        margin-top: 15px;
+        margin-bottom: 8px;
+        padding: 10px;
+        background-color: white;
+        border-radius: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
     }
 
-    /* キラキラエフェクト */
-    @keyframes sparkle {
-        0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
-        50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
-    }
-
-    div.stButton > button::before {
-        content: '✨';
-        position: absolute;
-        top: -10px;
-        right: -10px;
+    /* 合計点の表示 */
+    .total-score {
         font-size: 1.5em;
-        opacity: 0;
-        pointer-events: none;
+        font-weight: 700;
+        text-align: center;
+        padding: 20px;
+        background-color: white;
+        border-radius: 15px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        margin: 20px 0;
     }
 
-    div.stButton > button:active::before {
-        animation: sparkle 0.6s ease-out;
+    /* ナビゲーションボタン */
+    div.stButton > button[data-testid="baseButton-primary"] {
+        min-height: 60px;
+        font-size: 1.3em;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border: none;
+    }
+
+    /* モバイル対応 */
+    @media screen and (max-width: 768px) {
+        .main .block-container {
+            padding: 0.5rem;
+        }
+
+        div.stButton > button {
+            height: 55px;
+            font-size: 1.1em;
+        }
     }
 </style>
-
-<script>
-    // 改善されたスクロール制御
-    (function() {
-        let lastScrollAction = sessionStorage.getItem('lastScrollAction') || 'none';
-        let hasProcessedScroll = false;
-
-        function handleScroll() {
-            if (hasProcessedScroll) return;
-
-            // Streamlitのコンテンツが完全にロードされるまで待機
-            const mainContent = document.querySelector('[data-testid="stAppViewContainer"]');
-            if (!mainContent) {
-                setTimeout(handleScroll, 50);
-                return;
-            }
-
-            // マーカーを探す（より確実に）
-            const markers = document.querySelectorAll('[data-testid="stMarkdownContainer"]');
-            let foundAction = null;
-
-            for (let marker of markers) {
-                const text = marker.textContent.trim();
-                if (text === 'SCROLL_TO_TOP' || text === 'SCROLL_TO_RESULTS') {
-                    foundAction = text;
-                    hasProcessedScroll = true;
-                    break;
-                }
-            }
-
-            if (foundAction) {
-                // マーカーが見つかった場合は強制的に最上部へ
-                window.scrollTo({ top: 0, behavior: 'instant' });
-                sessionStorage.setItem('lastScrollAction', foundAction);
-                sessionStorage.removeItem('scrollPosition');
-            } else if (lastScrollAction !== 'none') {
-                // 前回のアクションがあった場合は最上部に戻す
-                window.scrollTo({ top: 0, behavior: 'instant' });
-                sessionStorage.setItem('lastScrollAction', 'none');
-            } else {
-                // 通常はスクロール位置を保持
-                const savedPosition = sessionStorage.getItem('scrollPosition');
-                if (savedPosition) {
-                    window.scrollTo(0, parseInt(savedPosition));
-                }
-            }
-        }
-
-        // スクロール位置を保存（ボタンクリック時）
-        document.addEventListener('click', function(e) {
-            const button = e.target.closest('button');
-            if (button) {
-                sessionStorage.setItem('scrollPosition', window.scrollY);
-            }
-        });
-
-        // ページロード時に実行
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', handleScroll);
-        } else {
-            handleScroll();
-        }
-
-        // Streamlitの再描画を検知
-        const observer = new MutationObserver(function(mutations) {
-            hasProcessedScroll = false;
-            setTimeout(handleScroll, 100);
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    })();
-</script>
 """, unsafe_allow_html=True)
 
 # ============================================================================
@@ -227,18 +165,13 @@ if 'prediction_results' not in st.session_state:
 if 'predictor' not in st.session_state:
     st.session_state.predictor = None
 
-if 'scroll_action' not in st.session_state:
-    st.session_state.scroll_action = None  # 'top', 'results', None
-
 # ============================================================================
 # ヘルパー関数
 # ============================================================================
 
-def increment_score(key, max_val):
-    """スコアを1増やす（最大値でループ）"""
-    if key not in st.session_state.scores:
-        st.session_state.scores[key] = 0
-    st.session_state.scores[key] = (st.session_state.scores[key] + 1) % (max_val + 1)
+def set_score(key, value):
+    """スコアを設定"""
+    st.session_state.scores[key] = value
 
 def get_score(key):
     """スコアを取得（デフォルト0）"""
@@ -288,14 +221,12 @@ def next_scale():
     """次のスケールに進む"""
     if st.session_state.current_scale < 3:
         st.session_state.current_scale += 1
-        st.session_state.scroll_action = 'top'
         st.rerun()
 
 def prev_scale():
     """前のスケールに戻る"""
     if st.session_state.current_scale > 0:
         st.session_state.current_scale -= 1
-        st.session_state.scroll_action = 'top'
         st.rerun()
 
 def go_to_scale(scale_index):
@@ -308,14 +239,6 @@ def go_to_scale(scale_index):
 # ============================================================================
 
 st.title("MG予測システム")
-
-# スクロールマーカー（JavaScriptが検知用）- 最上部に配置
-if st.session_state.scroll_action == 'top':
-    st.markdown('<div style="display:none">SCROLL_TO_TOP</div>', unsafe_allow_html=True)
-    st.session_state.scroll_action = None
-elif st.session_state.scroll_action == 'results':
-    st.markdown('<div style="display:none">SCROLL_TO_RESULTS</div>', unsafe_allow_html=True)
-    st.session_state.scroll_action = None
 
 # 進捗インジケーター
 progress_labels = ["MG-ADL", "MG Composite", "MGQOL-15r", "予測結果"]
@@ -335,26 +258,33 @@ st.markdown("---")
 # MG-ADL入力
 # ============================================================================
 
-# MG-ADL入力
 if st.session_state.current_scale == 0:
     st.header("MG-ADL (0-24点)")
+    st.caption("各項目について、該当するスコアをタップしてください")
 
-    cols = st.columns(2)
-    for i, item in enumerate(MGADL_ITEMS):
+    for item in MGADL_ITEMS:
         key = f"adl_{item['key']}"
-        max_val = len(item['options']) - 1  # 0-3なので、4つのオプション - 1
+        current_score = get_score(key)
+        max_val = len(item['options']) - 1
 
-        with cols[i % 2]:
-            # 自動反映される項目には印をつける
-            marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-            st.markdown(f"**{item['name']}{marker}**")
-            if st.button(f"スコア: {get_score(key)}", key=f"btn_{key}", use_container_width=True):
-                increment_score(key, max_val)
-                # 自動的にMGCに反映
-                sync_adl_to_mgc()
-                st.rerun()
+        # 自動反映される項目には印をつける
+        marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+        st.markdown(f'<div class="item-label">{item["name"]}{marker}</div>', unsafe_allow_html=True)
 
-    st.markdown(f"**合計: {calculate_total(MGADL_ITEMS, 'adl')}/24**")
+        # スコアボタンを横並びで表示
+        cols = st.columns(max_val + 1)
+        for i in range(max_val + 1):
+            with cols[i]:
+                button_type = "primary" if current_score == i else "secondary"
+                if st.button(f"{i}", key=f"btn_{key}_{i}", type=button_type, use_container_width=True):
+                    set_score(key, i)
+                    # 自動的にMGCに反映
+                    sync_adl_to_mgc()
+                    st.rerun()
+
+    # 合計点表示
+    total = calculate_total(MGADL_ITEMS, 'adl')
+    st.markdown(f'<div class="total-score">合計: {total}/24点</div>', unsafe_allow_html=True)
     st.caption("⚡印の項目はMG Compositeに自動反映されます")
 
     st.markdown("---")
@@ -369,26 +299,31 @@ if st.session_state.current_scale == 0:
 # MGC入力
 # ============================================================================
 
-# MGC入力
 elif st.session_state.current_scale == 1:
     st.header("MG Composite (0-50点)")
+    st.caption("各項目について、該当するスコアをタップしてください")
 
-    cols = st.columns(2)
-    for i, item in enumerate(MGC_ITEMS):
+    for item in MGC_ITEMS:
         key = f"mgc_{item['key']}"
-        max_val = len(item['values']) - 1  # values配列のインデックス最大値
+        current_score = get_score(key)
+        max_val = len(item['values']) - 1
 
-        with cols[i % 2]:
-            marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-            st.markdown(f"**{item['name']}{marker}**")
-            # 現在のインデックスを取得して、実際の点数を表示
-            current_index = get_score(key)
-            actual_score = item['values'][current_index]
-            if st.button(f"スコア: {actual_score}", key=f"btn_{key}", use_container_width=True):
-                increment_score(key, max_val)
-                st.rerun()
+        marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+        st.markdown(f'<div class="item-label">{item["name"]}{marker}<br><small style="color: #8e8e93;">{item.get("description", "")}</small></div>', unsafe_allow_html=True)
 
-    st.markdown(f"**合計: {calculate_total(MGC_ITEMS, 'mgc')}/50**")
+        # スコアボタンを横並びで表示（実際の点数を表示）
+        cols = st.columns(max_val + 1)
+        for i in range(max_val + 1):
+            with cols[i]:
+                actual_score = item['values'][i]
+                button_type = "primary" if current_score == i else "secondary"
+                if st.button(f"{actual_score}", key=f"btn_{key}_{i}", type=button_type, use_container_width=True):
+                    set_score(key, i)
+                    st.rerun()
+
+    # 合計点表示
+    total = calculate_total(MGC_ITEMS, 'mgc')
+    st.markdown(f'<div class="total-score" style="color: #34c759;">合計: {total}/50点</div>', unsafe_allow_html=True)
     st.caption("⚡印の項目はMG-ADLから自動反映されます")
 
     st.markdown("---")
@@ -406,22 +341,29 @@ elif st.session_state.current_scale == 1:
 # MGQOL入力
 # ============================================================================
 
-# MGQOL入力
 elif st.session_state.current_scale == 2:
     st.header("MGQOL-15r (0-30点)")
+    st.caption("各質問について、該当するスコアをタップしてください")
 
-    cols = st.columns(2)
-    for i, item in enumerate(MGQOL_ITEMS):
+    for item in MGQOL_ITEMS:
         key = f"mgqol_{item['key']}"
-        max_val = 2  # MGQOLは全て0-2点
+        current_score = get_score(key)
 
-        with cols[i % 2]:
-            st.markdown(f"**{item['name']}**")
-            if st.button(f"スコア: {get_score(key)}", key=f"btn_{key}", use_container_width=True):
-                increment_score(key, max_val)
-                st.rerun()
+        st.markdown(f'<div class="item-label">{item["name"]}</div>', unsafe_allow_html=True)
 
-    st.markdown(f"**合計: {calculate_total(MGQOL_ITEMS, 'mgqol')}/30**")
+        # スコアボタンを横並びで表示（0-2点）
+        cols = st.columns(3)
+        score_labels = ["0: 全くそうは思わない", "1: 少しそう思う", "2: 強くそう思う"]
+        for i in range(3):
+            with cols[i]:
+                button_type = "primary" if current_score == i else "secondary"
+                if st.button(f"{i}", key=f"btn_{key}_{i}", type=button_type, use_container_width=True):
+                    set_score(key, i)
+                    st.rerun()
+
+    # 合計点表示
+    total = calculate_total(MGQOL_ITEMS, 'mgqol')
+    st.markdown(f'<div class="total-score" style="color: #af52de;">合計: {total}/30点</div>', unsafe_allow_html=True)
 
     st.markdown("---")
 
@@ -489,13 +431,13 @@ elif st.session_state.current_scale == 3:
         classification = results['classification']
         total_votes = results['total_mm_votes']
         total_models = results['total_models']
-        
+
         # 確率に応じて色を変更
         if classification == "MM or better":
             color = "#4CAF50"  # 緑
         else:
             color = "#F44336"  # 赤
-        
+
         st.markdown(f"""
         <div style='background-color: {color}; padding: 20px; border-radius: 10px; text-align: center;'>
             <h2 style='color: white; margin: 0;'>予測結果</h2>
@@ -504,7 +446,7 @@ elif st.session_state.current_scale == 3:
             <p style='color: white; margin: 10px 0; font-size: 14px;'>アンサンブル確率: {ensemble_prob:.1%}</p>
         </div>
         """, unsafe_allow_html=True)
-        
+
         # 入力スコア合計の表示
         st.markdown("### 入力スコア")
         score_cols = st.columns(3)
@@ -517,10 +459,10 @@ elif st.session_state.current_scale == 3:
         with score_cols[2]:
             mgqol_total = calculate_total(MGQOL_ITEMS, 'mgqol')
             st.metric("MGQOL-15r", f"{mgqol_total}/30")
-        
+
         # 各モデルの予測詳細
         st.markdown("### 各モデルの予測")
-        
+
         # 詳細情報（折りたたみ）
         with st.expander("📊 詳細"):
             st.write("**各モデルの詳細データ:**")
@@ -529,18 +471,18 @@ elif st.session_state.current_scale == 3:
                 st.write(f"  - 確率: {vote_info['probability']:.6f}")
                 st.write(f"  - カットオフ: {vote_info['cutoff']:.6f}")
                 st.write(f"  - 判定: {vote_info['prediction']}")
-        
+
             st.write("\n**5-fold予測値:**")
             for model_name, probs in results['predictions'].items():
                 st.write(f"**{model_name}**: {[f'{p:.4f}' for p in probs]}")
-        
+
         cols = st.columns(3)
         for i, (model_name, vote_info) in enumerate(results['model_votes'].items()):
             with cols[i]:
                 prob = vote_info['probability']
                 cutoff = vote_info['cutoff']
                 pred = vote_info['prediction']
-        
+
                 # カラー: MM or better なら緑、そうでなければ赤
                 if pred == "MM or better":
                     badge_color = "#4CAF50"
@@ -548,7 +490,7 @@ elif st.session_state.current_scale == 3:
                 else:
                     badge_color = "#F44336"
                     icon = "✗"
-        
+
                 st.markdown(f"""
                 <div style='padding: 15px; border: 2px solid {badge_color}; border-radius: 10px; text-align: center;'>
                     <div style='font-weight: bold; font-size: 14px; margin-bottom: 5px;'>{model_name}</div>
@@ -556,18 +498,18 @@ elif st.session_state.current_scale == 3:
                     <div style='font-size: 20px; margin-top: 5px;'>{icon}</div>
                 </div>
                 """, unsafe_allow_html=True)
-        
+
         # モジュールスコア表示
         st.markdown("### モジュールスコア")
-        
+
         module_df = results['module_scores'].copy()
         module_df.columns = [col.replace('module ', '').title() for col in module_df.columns]
-        
+
         cols = st.columns(4)
         for i, (col_name, value) in enumerate(module_df.iloc[0].items()):
             with cols[i]:
                 st.metric(col_name, f"{value:.4f}")
-        
+
         # レーダーチャート
         st.markdown("### 比較チャート")
 
