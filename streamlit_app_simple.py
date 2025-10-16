@@ -7,7 +7,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from pathlib import Path
-import streamlit.components.v1 as components
 
 from streamlit_config import (
     MGADL_ITEMS, MGC_ITEMS, MGQOL_ITEMS,
@@ -15,7 +14,6 @@ from streamlit_config import (
 )
 from streamlit_predictor import MGPredictor
 from streamlit_visualizer import create_radar_chart
-from streamlit_mg_component import create_mg_scale_component
 
 # ============================================================================
 # ページ設定
@@ -321,25 +319,34 @@ st.markdown("---")
 if st.session_state.current_scale == 0:
     st.header("MG-ADL (0-24点)")
 
-    # mg-scale-iOS.htmlと完全に同じUIのコンポーネントを表示
-    html_content = create_mg_scale_component(
-        scale_type="adl",
-        items=[{"name": item["name"], "key": item["key"]} for item in MGADL_ITEMS]
-    )
+    # 各項目のスコア入力（iOS風タップUIで）
+    for item in MGADL_ITEMS:
+        key = f"adl_{item['key']}"
+        current_score = get_score(key)
 
-    # カスタムコンポーネントを表示（高さを調整）
-    result = components.html(html_content, height=600, scrolling=False)
+        col1, col2, col3, col4, col5 = st.columns([3, 1, 1, 1, 1])
 
-    # 結果を受け取ってセッション状態に保存
-    if result:
-        for i, item in enumerate(MGADL_ITEMS):
-            key = f"adl_{item['key']}"
-            if 'scores' in result:
-                st.session_state.scores[key] = result['scores'][i]
-                # ADLからMGCへの自動同期
-                if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
-                    mgc_key = f"mgc_{item['key']}"
-                    st.session_state.scores[mgc_key] = result['scores'][i]
+        with col1:
+            marker = " (→MGC自動反映)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+            st.markdown(f"**{item['name']}{marker}**")
+
+        # スコアボタン
+        for i, col in enumerate([col2, col3, col4, col5]):
+            with col:
+                if st.button(
+                    str(i),
+                    key=f"{key}_{i}",
+                    type="primary" if current_score == i else "secondary",
+                    use_container_width=True
+                ):
+                    set_score(key, i)
+                    if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
+                        sync_adl_to_mgc()
+                    st.rerun()
+
+    # 合計点
+    total = calculate_total(MGADL_ITEMS, 'adl')
+    st.info(f"**合計: {total}/24点**")
 
     st.markdown("---")
     col1, col2 = st.columns(2)
@@ -354,26 +361,33 @@ if st.session_state.current_scale == 0:
 elif st.session_state.current_scale == 1:
     st.header("MG Composite (0-50点)")
 
-    # mg-scale-iOS.htmlと完全に同じUIのコンポーネントを表示
-    html_content = create_mg_scale_component(
-        scale_type="mgc",
-        items=[{
-            "name": item["name"],
-            "key": item["key"],
-            "values": item["values"],
-            "description": item.get("description", "")
-        } for item in MGC_ITEMS]
-    )
+    # 各項目のスコア入力
+    for item in MGC_ITEMS:
+        key = f"mgc_{item['key']}"
+        current_score = get_score(key)
 
-    # カスタムコンポーネントを表示（高さを調整）
-    result = components.html(html_content, height=700, scrolling=False)
+        marker = " (ADLから自動)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+        desc = f" - {item['description']}" if item.get('description') else ""
+        st.markdown(f"**{item['name']}{marker}**{desc}")
 
-    # 結果を受け取ってセッション状態に保存
-    if result:
-        for i, item in enumerate(MGC_ITEMS):
-            key = f"mgc_{item['key']}"
-            if 'scores' in result:
-                st.session_state.scores[key] = result['scores'][i]
+        # 値の数に応じてカラムを作成
+        values = item['values']
+        cols = st.columns(len(values))
+
+        for i, (col, val) in enumerate(zip(cols, values)):
+            with col:
+                if st.button(
+                    str(val),
+                    key=f"{key}_{i}",
+                    type="primary" if current_score == i else "secondary",
+                    use_container_width=True
+                ):
+                    set_score(key, i)
+                    st.rerun()
+
+    # 合計点
+    total = calculate_total(MGC_ITEMS, 'mgc')
+    st.success(f"**合計: {total}/50点**")
 
     st.markdown("---")
     col1, col2 = st.columns(2)
@@ -391,24 +405,31 @@ elif st.session_state.current_scale == 1:
 elif st.session_state.current_scale == 2:
     st.header("MGQOL-15r (0-30点)")
 
-    # mg-scale-iOS.htmlと完全に同じUIのコンポーネントを表示
-    html_content = create_mg_scale_component(
-        scale_type="mgqol",
-        items=[{
-            "name": item["name"],
-            "key": item["key"]
-        } for item in MGQOL_ITEMS]
-    )
+    # 各項目のスコア入力
+    for item in MGQOL_ITEMS:
+        key = f"mgqol_{item['key']}"
+        current_score = get_score(key)
 
-    # カスタムコンポーネントを表示（高さを調整）
-    result = components.html(html_content, height=800, scrolling=False)
+        col1, col2, col3, col4 = st.columns([4, 1, 1, 1])
 
-    # 結果を受け取ってセッション状態に保存
-    if result:
-        for i, item in enumerate(MGQOL_ITEMS):
-            key = f"mgqol_{item['key']}"
-            if 'scores' in result:
-                st.session_state.scores[key] = result['scores'][i]
+        with col1:
+            st.markdown(f"**{item['name']}**")
+
+        # スコアボタン（0-2）
+        for i, col in enumerate([col2, col3, col4]):
+            with col:
+                if st.button(
+                    str(i),
+                    key=f"{key}_{i}",
+                    type="primary" if current_score == i else "secondary",
+                    use_container_width=True
+                ):
+                    set_score(key, i)
+                    st.rerun()
+
+    # 合計点
+    total = calculate_total(MGQOL_ITEMS, 'mgqol')
+    st.warning(f"**合計: {total}/30点**")
 
     st.markdown("---")
     col1, col2 = st.columns(2)
