@@ -28,9 +28,9 @@ st.set_page_config(
 # カスタムCSSでモバイル対応とボタンエフェクトを追加
 st.markdown("""
 <style>
-    /* モバイル対応: ボタンを大きく + 楽しいエフェクト */
+    /* モバイル対応: ボタンを大きく + プルプルエフェクト */
     div.stButton > button {
-        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transition: transform 0.1s ease;
         position: relative;
         overflow: visible;
         min-height: 60px;
@@ -41,25 +41,26 @@ st.markdown("""
     }
 
     div.stButton > button:hover {
-        transform: scale(1.08);
+        transform: scale(1.05);
         box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     }
 
     div.stButton > button:active {
-        animation: bouncePress 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
-        transform: scale(0.92);
+        animation: jiggle 0.5s ease-in-out;
     }
 
-    /* ぽわわんエフェクト（長めのアニメーション）*/
-    @keyframes bouncePress {
-        0% { transform: scale(1); }
-        15% { transform: scale(0.85); }
-        30% { transform: scale(1.15); }
-        45% { transform: scale(0.95); }
-        60% { transform: scale(1.05); }
-        75% { transform: scale(0.98); }
-        90% { transform: scale(1.02); }
-        100% { transform: scale(1); }
+    /* プルプル揺れるアニメーション */
+    @keyframes jiggle {
+        0%, 100% { transform: rotate(0deg) scale(1); }
+        10% { transform: rotate(-3deg) scale(0.95); }
+        20% { transform: rotate(3deg) scale(1.05); }
+        30% { transform: rotate(-3deg) scale(0.98); }
+        40% { transform: rotate(3deg) scale(1.03); }
+        50% { transform: rotate(-2deg) scale(0.99); }
+        60% { transform: rotate(2deg) scale(1.02); }
+        70% { transform: rotate(-1deg) scale(1); }
+        80% { transform: rotate(1deg) scale(1.01); }
+        90% { transform: rotate(-0.5deg) scale(1); }
     }
 
     /* ボタンクリック時の波紋エフェクト */
@@ -105,15 +106,10 @@ st.markdown("""
         margin-bottom: 10px;
     }
 
-    /* タップ時の即座のフィードバック */
-    div.stButton > button:active {
-        opacity: 0.8;
-    }
-
     /* キラキラエフェクト */
     @keyframes sparkle {
-        0%, 100% { opacity: 0; transform: scale(0); }
-        50% { opacity: 1; transform: scale(1); }
+        0%, 100% { opacity: 0; transform: scale(0) rotate(0deg); }
+        50% { opacity: 1; transform: scale(1.2) rotate(180deg); }
     }
 
     div.stButton > button::before {
@@ -132,65 +128,78 @@ st.markdown("""
 </style>
 
 <script>
-    // スクロール制御
-    let shouldPreserveScroll = true;
+    // 改善されたスクロール制御
+    (function() {
+        let lastScrollAction = sessionStorage.getItem('lastScrollAction') || 'none';
+        let hasProcessedScroll = false;
 
-    // ボタンクリック時のスクロール位置を保存
-    window.addEventListener('beforeunload', function() {
-        if (shouldPreserveScroll) {
-            sessionStorage.setItem('scrollPosition', window.scrollY);
-        }
-    });
+        function handleScroll() {
+            if (hasProcessedScroll) return;
 
-    // Streamlit rerun時のスクロール制御
-    let hasScrolled = false;
-
-    const checkAndScroll = function() {
-        if (hasScrolled) return;
-
-        // マーカーを探す
-        let scrollAction = null;
-        const allElements = document.body.getElementsByTagName('*');
-
-        for (let el of allElements) {
-            const text = el.textContent || '';
-            if (text === 'SCROLL_TO_TOP') {
-                scrollAction = 'top';
-                hasScrolled = true;
-                break;
-            } else if (text === 'SCROLL_TO_RESULTS') {
-                scrollAction = 'results';
-                hasScrolled = true;
-                break;
+            // Streamlitのコンテンツが完全にロードされるまで待機
+            const mainContent = document.querySelector('[data-testid="stAppViewContainer"]');
+            if (!mainContent) {
+                setTimeout(handleScroll, 50);
+                return;
             }
-        }
 
-        if (scrollAction === 'top' || scrollAction === 'results') {
-            // 常に一番上に強制スクロール
-            setTimeout(() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
+            // マーカーを探す（より確実に）
+            const markers = document.querySelectorAll('[data-testid="stMarkdownContainer"]');
+            let foundAction = null;
+
+            for (let marker of markers) {
+                const text = marker.textContent.trim();
+                if (text === 'SCROLL_TO_TOP' || text === 'SCROLL_TO_RESULTS') {
+                    foundAction = text;
+                    hasProcessedScroll = true;
+                    break;
+                }
+            }
+
+            if (foundAction) {
+                // マーカーが見つかった場合は強制的に最上部へ
+                window.scrollTo({ top: 0, behavior: 'instant' });
+                sessionStorage.setItem('lastScrollAction', foundAction);
                 sessionStorage.removeItem('scrollPosition');
-            }, 100);
-        } else if (!scrollAction) {
-            // 通常はスクロール位置を保持
-            const scrollPosition = sessionStorage.getItem('scrollPosition');
-            if (scrollPosition !== null) {
-                setTimeout(() => {
-                    window.scrollTo(0, parseInt(scrollPosition));
-                }, 100);
+            } else if (lastScrollAction !== 'none') {
+                // 前回のアクションがあった場合は最上部に戻す
+                window.scrollTo({ top: 0, behavior: 'instant' });
+                sessionStorage.setItem('lastScrollAction', 'none');
+            } else {
+                // 通常はスクロール位置を保持
+                const savedPosition = sessionStorage.getItem('scrollPosition');
+                if (savedPosition) {
+                    window.scrollTo(0, parseInt(savedPosition));
+                }
             }
         }
-    };
 
-    // ページ読み込み時と変更時に実行
-    window.addEventListener('load', checkAndScroll);
+        // スクロール位置を保存（ボタンクリック時）
+        document.addEventListener('click', function(e) {
+            const button = e.target.closest('button');
+            if (button) {
+                sessionStorage.setItem('scrollPosition', window.scrollY);
+            }
+        });
 
-    const observer = new MutationObserver(function() {
-        hasScrolled = false;
-        checkAndScroll();
-    });
+        // ページロード時に実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', handleScroll);
+        } else {
+            handleScroll();
+        }
 
-    observer.observe(document.body, { childList: true, subtree: true });
+        // Streamlitの再描画を検知
+        const observer = new MutationObserver(function(mutations) {
+            hasProcessedScroll = false;
+            setTimeout(handleScroll, 100);
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
+    })();
 </script>
 """, unsafe_allow_html=True)
 
@@ -559,10 +568,10 @@ elif st.session_state.current_scale == 3:
         
         # レーダーチャート
         st.markdown("### 比較チャート")
-        
+
         comparison = results['comparison']
         patient_scores = results['module_scores'].values[0]
-        
+
         fig = create_radar_chart(
             patient_scores=patient_scores,
             mm_avg=comparison['mm_avg'],
@@ -570,8 +579,17 @@ elif st.session_state.current_scale == 3:
             module_names=comparison['module_names'],
             ensemble_prob=ensemble_prob
         )
-        
-        st.plotly_chart(fig, use_container_width=True)
+
+        # モバイル最適化: ツールバー非表示、スクロールズーム無効
+        st.plotly_chart(
+            fig,
+            use_container_width=True,
+            config={
+                'displayModeBar': False,
+                'scrollZoom': False,
+                'displaylogo': False
+            }
+        )
 
     else:
         st.info("予測を実行中です...")

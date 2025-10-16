@@ -91,7 +91,7 @@ def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensembl
     # 円の範囲を0.15だが、データが超える場合は自動拡張
     display_range = max(0.15, max_val * 1.1)
 
-    # レイアウト設定（モバイル対応: チャートを大きく）
+    # レイアウト設定（モバイル対応: チャートを大きく、余白を最小化）
     fig.update_layout(
         polar=dict(
             radialaxis=dict(
@@ -99,31 +99,33 @@ def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensembl
                 range=[0, display_range],
                 tickvals=[0.05, 0.10, 0.15],
                 ticktext=['0.05', '0.10', '0.15'],
-                tickfont=dict(size=16, color='gray'),
+                tickfont=dict(size=20, color='gray'),
                 showline=False,
                 showgrid=True,
                 gridcolor='lightgray',
                 gridwidth=2
             ),
             angularaxis=dict(
-                tickfont=dict(size=18, color='black', family='Arial, sans-serif')
+                tickfont=dict(size=22, color='black', family='Arial, sans-serif', weight='bold')
             ),
             bgcolor='white'
         ),
         showlegend=True,
         legend=dict(
             x=0.5,
-            y=-0.15,
+            y=-0.05,
             xanchor='center',
             yanchor='top',
             orientation='h',
-            font=dict(size=14),
+            font=dict(size=18),
             bgcolor='rgba(255, 255, 255, 0.95)',
             bordercolor='black',
             borderwidth=1
         ),
-        height=1400,
-        margin=dict(l=120, r=120, t=120, b=180)
+        height=800,
+        margin=dict(l=40, r=40, t=60, b=120),
+        paper_bgcolor='white',
+        plot_bgcolor='white'
     )
 
     return fig
