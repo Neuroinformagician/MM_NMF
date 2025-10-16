@@ -20,7 +20,8 @@ REQUIRED_FILES = {
     "original_data": DATA_DIR / "df_4th.csv",
     "H_matrix": MODEL_DIR / "H_matrix.pkl",
     "W_MM": MODEL_DIR / "W_MM.pkl",
-    "module_names": MODEL_DIR / "module_names_reordered.pkl"
+    "module_names": MODEL_DIR / "module_names_reordered.pkl",
+    "optimal_cutoffs": MODEL_DIR / "optimal_cutoffs.pkl"
 }
 
 # モデルファイル

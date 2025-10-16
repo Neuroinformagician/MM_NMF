@@ -27,38 +27,49 @@ class MGPredictor:
         self.module_names = None
         self.scaler = None
         self.df_original = None
+        self.optimal_cutoffs = None
 
-    @st.cache_resource
-    def load_resources(_self):
+    def load_resources(self):
         """リソース読み込み（キャッシュ）"""
         try:
             # H行列読み込み
             with open(REQUIRED_FILES["H_matrix"], 'rb') as f:
-                _self.H_matrix = pickle.load(f)
+                self.H_matrix = pickle.load(f)
 
             # W_MM読み込み（MM群/non-MM群の平均スコア）
             with open(REQUIRED_FILES["W_MM"], 'rb') as f:
-                _self.W_MM = pickle.load(f)
+                self.W_MM = pickle.load(f)
 
             # モジュール名読み込み
             with open(REQUIRED_FILES["module_names"], 'rb') as f:
-                _self.module_names = pickle.load(f)
+                self.module_names = pickle.load(f)
 
             # 元データ読み込み（スケーラー学習用）
-            _self.df_original = pd.read_csv(REQUIRED_FILES["original_data"], index_col=0)
+            self.df_original = pd.read_csv(REQUIRED_FILES["original_data"], index_col=0)
 
             # スケーラー学習
-            _self.scaler = MinMaxScaler()
-            _self.scaler.fit(_self.df_original[DF_COLUMNS])
+            self.scaler = MinMaxScaler()
+            self.scaler.fit(self.df_original[DF_COLUMNS])
 
             # モデル読み込み
-            _self.models = {}
+            self.models = {}
             for model_name, paths in MODEL_FILES.items():
-                _self.models[model_name] = []
+                self.models[model_name] = []
                 for path in paths:
                     with open(path, 'rb') as f:
                         model = pickle.load(f)
-                        _self.models[model_name].append(model)
+                        self.models[model_name].append(model)
+
+            # 最適カットオフ読み込み
+            with open(REQUIRED_FILES["optimal_cutoffs"], 'rb') as f:
+                cutoffs = pickle.load(f)
+                # GaussianNB を Naive Bayes に対応させる
+                self.optimal_cutoffs = {
+                    'SVM': float(cutoffs['SVM']),
+                    'Logistic Regression': float(cutoffs['Logistic Regression']),
+                    'Random Forest': float(cutoffs['Random Forest']),
+                    'Naive Bayes': float(cutoffs['GaussianNB'])
+                }
 
             return True
 
@@ -201,9 +212,9 @@ class MGPredictor:
                 "classification": "MM or better" or "non MM"
             }
         """
+        # Logistic Regressionを除外
         predictions = {
             "SVM": [],
-            "Logistic Regression": [],
             "Random Forest": [],
             "Naive Bayes": []
         }
@@ -227,14 +238,29 @@ class MGPredictor:
             all_probs.extend(probs)
         ensemble_prob = np.mean(all_probs)
 
-        # 分類
-        classification = "MM or better" if ensemble_prob > 0.5 else "non MM"
+        # Soft Voting: 各モデルの最適カットオフで判定し、多数決
+        model_votes = {}
+        for model_name, mean_prob in mean_predictions.items():
+            cutoff = self.optimal_cutoffs[model_name]
+            vote = 1 if mean_prob >= cutoff else 0  # 1: MM or better, 0: non MM
+            model_votes[model_name] = {
+                'probability': mean_prob,
+                'cutoff': cutoff,
+                'prediction': "MM or better" if vote == 1 else "non MM"
+            }
+
+        # 多数決で最終判定（3モデル中2つ以上）
+        total_votes = sum(1 for v in model_votes.values() if v['prediction'] == "MM or better")
+        classification = "MM or better" if total_votes >= 2 else "non MM"  # 3モデル中2つ以上
 
         return {
             "module_scores": module_scores,
             "predictions": predictions,
             "mean_predictions": mean_predictions,
+            "model_votes": model_votes,
             "ensemble": ensemble_prob,
+            "total_mm_votes": total_votes,
+            "total_models": len(model_votes),
             "classification": classification
         }
 

@@ -46,46 +46,57 @@ def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensembl
     # Figureを作成
     fig = go.Figure()
 
-    # non-MM群（赤系）
+    # non-MM群（薄い赤系）
     fig.add_trace(go.Scatterpolar(
         r=non_mm_closed,
         theta=labels_closed,
         fill='toself',
-        fillcolor='rgba(255, 107, 107, 0.15)',
-        line=dict(color='#FF6B6B', width=3),
-        marker=dict(size=10, color='#FF6B6B'),
+        fillcolor='rgba(255, 107, 107, 0.08)',
+        line=dict(color='rgba(255, 107, 107, 0.4)', width=2),
+        marker=dict(size=6, color='rgba(255, 107, 107, 0.4)'),
         name='non MM (mean)',
         hovertemplate='<b>%{theta}</b><br>Score: %{r:.4f}<extra></extra>'
     ))
 
-    # MM群（青緑系）
+    # MM群（薄い青緑系）
     fig.add_trace(go.Scatterpolar(
         r=mm_closed,
         theta=labels_closed,
         fill='toself',
-        fillcolor='rgba(78, 205, 196, 0.15)',
-        line=dict(color='#4ECDC4', width=3),
-        marker=dict(size=10, color='#4ECDC4'),
+        fillcolor='rgba(78, 205, 196, 0.08)',
+        line=dict(color='rgba(78, 205, 196, 0.4)', width=2),
+        marker=dict(size=6, color='rgba(78, 205, 196, 0.4)'),
         name='MM or better (mean)',
         hovertemplate='<b>%{theta}</b><br>Score: %{r:.4f}<extra></extra>'
     ))
 
-    # 患者データ（赤系、強調）
+    # 患者データ（黄色、強調）
     fig.add_trace(go.Scatterpolar(
         r=patient_closed,
         theta=labels_closed,
-        line=dict(color='#FF1744', width=4.5),
-        marker=dict(size=16, color='#FF1744', line=dict(color='white', width=3)),
+        fill='toself',
+        fillcolor='rgba(255, 193, 7, 0.3)',
+        line=dict(color='#FFC107', width=4),
+        marker=dict(size=14, color='#FFC107', line=dict(color='white', width=2)),
         name='This patient',
         hovertemplate='<b>%{theta}</b><br>Score: %{r:.4f}<extra></extra>'
     ))
+
+    # データの最大値を取得（はみ出し対策）
+    max_val = max(
+        np.max(patient_closed),
+        np.max(mm_closed),
+        np.max(non_mm_closed)
+    )
+    # 円の範囲を0.15だが、データが超える場合は自動拡張
+    display_range = max(0.15, max_val * 1.1)
 
     # レイアウト設定
     fig.update_layout(
         polar=dict(
             radialaxis=dict(
                 visible=True,
-                range=[0, 0.15],
+                range=[0, display_range],
                 tickvals=[0.05, 0.10, 0.15],
                 ticktext=['0.05', '0.10', '0.15'],
                 tickfont=dict(size=13, color='gray'),
@@ -101,35 +112,16 @@ def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensembl
         ),
         showlegend=True,
         legend=dict(
-            x=1.1,
+            x=1.05,
             y=1.0,
-            font=dict(size=14),
+            font=dict(size=12),
             bgcolor='rgba(255, 255, 255, 0.95)',
             bordercolor='black',
             borderwidth=1
         ),
-        title=dict(
-            text=f"<b>Ensemble Prediction: {ensemble_prob:.1%}</b><br>"
-                 f"<span style='font-size:14px'>Classification: "
-                 f"<b>{'MM or better' if ensemble_prob > 0.5 else 'non MM'}</b></span>",
-            x=0.5,
-            xanchor='center',
-            font=dict(size=17)
-        ),
-        height=600,
-        margin=dict(l=80, r=200, t=100, b=80)
+        height=500,
+        margin=dict(l=50, r=150, t=50, b=50)
     )
-
-    # 0.10の参照円を追加
-    theta_full = np.linspace(0, 360, 200)
-    fig.add_trace(go.Scatterpolar(
-        r=[0.10] * len(theta_full),
-        theta=theta_full,
-        mode='lines',
-        line=dict(color='black', width=2, dash='dash'),
-        showlegend=False,
-        hoverinfo='skip'
-    ))
 
     return fig
 

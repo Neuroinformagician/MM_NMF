@@ -4,8 +4,10 @@ Streamlit MG Prediction App
 """
 
 import streamlit as st
+import streamlit.components.v1 as components
 import pandas as pd
 import numpy as np
+from pathlib import Path
 
 from streamlit_config import (
     MGADL_ITEMS, MGC_ITEMS, MGQOL_ITEMS, MGQOL_OPTIONS,
@@ -105,109 +107,77 @@ def sync_adl_to_mgc():
 # サイドバー: 入力UI
 # ============================================================================
 
-with st.sidebar:
-    st.header("📋 患者データ入力")
+# タップ入力UI（サイドバーなし、メイン表示）
+st.header("患者データ入力")
 
-    # MG-ADL入力
-    with st.expander("🔵 MG-ADL (8項目)", expanded=True):
-        for item in MGADL_ITEMS:
-            key = f"adl_{item['key']}"
-            default_value = st.session_state.scores.get(key, 0)
+# HTMLコンポーネントを読み込み
+html_path = Path(__file__).parent / "streamlit_tap_input.html"
+with open(html_path, 'r', encoding='utf-8') as f:
+    html_content = f.read()
 
-            st.session_state.scores[key] = st.selectbox(
-                item['name'],
-                options=[0, 1, 2, 3],
-                format_func=lambda x, opts=item['options']: opts[x],
-                index=default_value,
-                key=f"input_{key}"
-            )
+# タップ入力コンポーネント
+tap_scores = components.html(
+    html_content,
+    height=650,
+    scrolling=False
+)
 
-        adl_total = calculate_adl_total()
-        st.metric("合計点", f"{adl_total}/24点")
+# デバッグ: HTMLコンポーネントからの戻り値を表示
+st.write("### デバッグ情報")
+st.write("HTMLコンポーネントからの戻り値:")
+st.write(f"型: {type(tap_scores)}")
+st.write(f"値: {tap_scores}")
 
-    # MG Composite入力
-    with st.expander("🟢 MG Composite (10項目)", expanded=False):
-        # ADLから自動反映ボタン
-        if st.button("🔄 ADLから重複項目を反映", key="sync_adl"):
-            sync_adl_to_mgc()
-            st.rerun()
+# タップ入力から値を取得
+if tap_scores is not None and isinstance(tap_scores, dict):
+    st.write("✅ 辞書型のデータを受信しました")
+    # 値が変更された場合のみ更新
+    if tap_scores != st.session_state.scores:
+        st.session_state.scores = tap_scores.copy()
+        st.write("✅ セッション状態を更新しました")
 
-        for item in MGC_ITEMS:
-            key = f"mgc_{item['key']}"
-            default_value = st.session_state.scores.get(key, 0)
+        # ADLからMGCへの自動同期
+        sync_adl_to_mgc()
+        st.write("✅ ADL→MGC同期を実行しました")
+else:
+    st.write("❌ HTMLコンポーネントからデータを受信していません")
 
-            # ADLから反映される項目は表示を変える
-            if 'from_adl' in item:
-                label = f"{item['name']} ⚡"
-                help_text = f"ADLの「{item['from_adl']}」から自動反映可能"
-            else:
-                label = item['name']
-                help_text = item['description']
+# デバッグ表示（現在のスコア）
+st.write("### 現在のセッション状態")
+st.write(f"session_state.scores: {st.session_state.scores}")
+if st.session_state.scores:
+    with st.expander("詳細データ確認"):
+        st.write(st.session_state.scores)
+        st.write(f"MG-ADL合計: {calculate_adl_total()}")
+        st.write(f"MGC合計: {calculate_mgc_total()}")
+        st.write(f"MGQOL合計: {calculate_mgqol_total()}")
 
-            st.session_state.scores[key] = st.selectbox(
-                label,
-                options=[0, 1, 2, 3],
-                format_func=lambda x, opts=item['options']: opts[x],
-                index=default_value,
-                key=f"input_{key}",
-                help=help_text
-            )
+st.markdown("---")
 
-        mgc_total = calculate_mgc_total()
-        st.metric("合計点", f"{mgc_total}/50点")
+# 予測・リセットボタン
+col1, col2, col3 = st.columns([1, 1, 1])
 
-    # MGQOL-15r入力
-    with st.expander("🟣 MGQOL-15r (15項目)", expanded=False):
-        for item in MGQOL_ITEMS:
-            key = f"mgqol_{item['key']}"
-            default_value = st.session_state.scores.get(key, 0)
+with col1:
+    predict_btn = st.button("予測実行", type="primary", use_container_width=True)
 
-            st.session_state.scores[key] = st.selectbox(
-                f"Q{item['key'][1:]}. {item['name'][:20]}...",
-                options=[0, 1, 2],
-                format_func=lambda x: MGQOL_OPTIONS[x],
-                index=default_value,
-                key=f"input_{key}",
-                help=item['name']
-            )
+with col2:
+    reset_btn = st.button("リセット", use_container_width=True)
 
-        mgqol_total = calculate_mgqol_total()
-        st.metric("合計点", f"{mgqol_total}/30点")
+with col3:
+    sync_btn = st.button("ADL→MGC同期", use_container_width=True)
 
-    # 予測・リセットボタン
-    st.markdown("---")
-    col1, col2 = st.columns(2)
+if reset_btn:
+    reset_all_scores()
 
-    with col1:
-        predict_btn = st.button("🔮 予測実行", type="primary", use_container_width=True)
-
-    with col2:
-        reset_btn = st.button("🔄 リセット", use_container_width=True)
-
-    if reset_btn:
-        reset_all_scores()
+if sync_btn:
+    sync_adl_to_mgc()
+    st.rerun()
 
 # ============================================================================
 # メインエリア
 # ============================================================================
 
-st.title("🏥 MG予測システム")
-st.markdown("重症筋無力症（MG）患者の**MM（Minimal Manifestations）予測**システム")
-
-# 入力サマリー
-st.subheader("📊 入力サマリー")
-col1, col2, col3 = st.columns(3)
-
-with col1:
-    st.metric("🔵 MG-ADL", f"{adl_total}/24点")
-
-with col2:
-    st.metric("🟢 MG Composite", f"{mgc_total}/50点")
-
-with col3:
-    st.metric("🟣 MGQOL-15r", f"{mgqol_total}/30点")
-
-st.markdown("---")
+st.title("MG予測システム")
 
 # ============================================================================
 # 予測実行
@@ -259,71 +229,33 @@ if predict_btn:
 if st.session_state.prediction_results is not None:
     results = st.session_state.prediction_results
 
-    # モジュールスコア表示
-    st.subheader("🎯 予測結果")
-
-    st.markdown("#### モジュールスコア")
-    module_df = results['module_scores'].copy()
-    module_df.columns = [col.replace('module ', '').title() for col in module_df.columns]
-
-    # スタイリング
-    styled_df = module_df.style.format("{:.4f}").background_gradient(
-        cmap='YlOrRd', axis=1
-    )
-    st.dataframe(styled_df, use_container_width=True)
-
-    # 各モデルの予測確率
-    st.markdown("#### 各モデル予測確率")
-    col1, col2, col3, col4 = st.columns(4)
-
-    with col1:
-        st.metric("SVM", f"{results['mean_predictions']['SVM']:.1%}")
-
-    with col2:
-        st.metric("Logistic Regression", f"{results['mean_predictions']['Logistic Regression']:.1%}")
-
-    with col3:
-        st.metric("Random Forest", f"{results['mean_predictions']['Random Forest']:.1%}")
-
-    with col4:
-        st.metric("Naive Bayes", f"{results['mean_predictions']['Naive Bayes']:.1%}")
-
-    # アンサンブル結果（強調表示）
-    st.markdown("---")
-    st.markdown("### 📊 アンサンブル予測")
-
+    # アンサンブル予測（大きく表示）
     ensemble_prob = results['ensemble']
     classification = results['classification']
 
-    col1, col2 = st.columns([1, 2])
+    # 予測結果表示
+    st.markdown(f"### 予測結果")
+    st.markdown(f"**MM or betterの確率:** {ensemble_prob:.1%}")
+    st.markdown(f"**判定:** {classification}")
 
-    with col1:
-        # 大きく表示
-        if ensemble_prob > 0.5:
-            st.success(f"## {ensemble_prob:.1%}")
-            st.success(f"### {classification}")
-        else:
-            st.warning(f"## {ensemble_prob:.1%}")
-            st.warning(f"### {classification}")
+    st.markdown("---")
 
-    with col2:
-        # 説明
-        if ensemble_prob > 0.5:
-            st.info("""
-            **MM or better (寛解状態)** と予測されました。
-            - アンサンブル確率が50%を超えています
-            - 現在の症状は軽症〜中等症と考えられます
-            """)
-        else:
-            st.warning("""
-            **non MM (非寛解状態)** と予測されました。
-            - アンサンブル確率が50%未満です
-            - 症状のコントロールに注意が必要です
-            """)
+    # モジュールスコア表示（シンプルに）
+    st.markdown("### モジュールスコア")
+
+    module_df = results['module_scores'].copy()
+    module_df.columns = [col.replace('module ', '').title() for col in module_df.columns]
+
+    # 4つのメトリクスで表示
+    cols = st.columns(4)
+    for i, (col_name, value) in enumerate(module_df.iloc[0].items()):
+        with cols[i]:
+            st.metric(col_name, f"{value:.4f}")
+
+    st.markdown("---")
 
     # レーダーチャート
-    st.markdown("---")
-    st.subheader("📈 モジュールスコア比較（レーダーチャート）")
+    st.markdown("### 比較チャート")
 
     comparison = results['comparison']
     patient_scores = results['module_scores'].values[0]
@@ -338,85 +270,9 @@ if st.session_state.prediction_results is not None:
 
     st.plotly_chart(fig, use_container_width=True)
 
-    # 比較テーブル
-    st.markdown("---")
-    st.subheader("📋 詳細比較")
-
-    comparison_table = create_module_comparison_table(
-        patient_scores=patient_scores,
-        mm_avg=comparison['mm_avg'],
-        non_mm_avg=comparison['non_mm_avg'],
-        module_names=comparison['module_names']
-    )
-
-    st.dataframe(comparison_table, use_container_width=True)
-
-    # モジュール別評価
-    st.markdown("#### モジュール別評価")
-
-    assessments = create_module_assessment_text(
-        patient_scores=patient_scores,
-        mm_avg=comparison['mm_avg'],
-        non_mm_avg=comparison['non_mm_avg'],
-        module_names=comparison['module_names']
-    )
-
-    for assessment in assessments:
-        color = assessment['color']
-        if color == 'green':
-            st.success(f"{assessment['icon']} **{assessment['module']}**: {assessment['score']:.4f} — {assessment['status']}")
-        elif color == 'red':
-            st.error(f"{assessment['icon']} **{assessment['module']}**: {assessment['score']:.4f} — {assessment['status']}")
-        else:
-            st.info(f"{assessment['icon']} **{assessment['module']}**: {assessment['score']:.4f} — {assessment['status']}")
-
 else:
     # 予測前の表示
-    st.info("👈 左のサイドバーから患者データを入力し、「🔮 予測実行」ボタンをクリックしてください。")
-
-    # サンプルデータボタン
-    if st.button("📝 サンプルデータを読み込む"):
-        # 症例予測.ipynbのサンプルデータ
-        sample_data = {
-            # MGC
-            "mgc_ptosis": 0,
-            "mgc_diplopia": 0,
-            "mgc_eyelid_closure": 0,
-            "mgc_speech": 0,
-            "mgc_chewing": 0,
-            "mgc_swallowing": 0,
-            "mgc_respiration": 1,
-            "mgc_neck": 1,
-            "mgc_upper_limb": 0,
-            "mgc_lower_limb": 0,
-            # MGADL
-            "adl_speech": 0,
-            "adl_chewing": 0,
-            "adl_swallowing": 0,
-            "adl_respiration": 0,
-            "adl_toothbrushing": 1,
-            "adl_getting_up": 0,
-            "adl_diplopia": 0,
-            "adl_ptosis": 0,
-            # MGQOL15r
-            "mgqol_q1": 0,
-            "mgqol_q2": 0,
-            "mgqol_q3": 0,
-            "mgqol_q4": 0,
-            "mgqol_q5": 0,
-            "mgqol_q6": 0,
-            "mgqol_q7": 0,
-            "mgqol_q8": 0,
-            "mgqol_q9": 0,
-            "mgqol_q10": 0,
-            "mgqol_q11": 0,
-            "mgqol_q12": 0,
-            "mgqol_q13": 1,
-            "mgqol_q14": 1,
-            "mgqol_q15": 1
-        }
-        st.session_state.scores = sample_data
-        st.rerun()
+    st.info("左のサイドバーから患者データを入力し、「予測実行」ボタンをクリックしてください。")
 
 # ============================================================================
 # フッター

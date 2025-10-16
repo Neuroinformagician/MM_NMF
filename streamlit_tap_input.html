@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
+            margin: 0;
+            padding: 10px;
+            background-color: #f2f2f7;
+        }
+
+        .nav {
+            display: flex;
+            margin-bottom: 15px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .nav-item {
+            flex: 1;
+            padding: 10px 0;
+            cursor: pointer;
+            text-align: center;
+            font-weight: 500;
+            transition: all 0.2s ease;
+            color: #8e8e93;
+            border-bottom: 3px solid transparent;
+        }
+
+        .nav-item.active {
+            font-weight: 600;
+        }
+
+        .nav-item[data-tab="adl"].active {
+            color: #007aff;
+            border-bottom: 3px solid #007aff;
+        }
+
+        .nav-item[data-tab="mgc"].active {
+            color: #34c759;
+            border-bottom: 3px solid #34c759;
+        }
+
+        .nav-item[data-tab="mgqol"].active {
+            color: #af52de;
+            border-bottom: 3px solid #af52de;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .tap-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .tap-item {
+            background-color: white;
+            border: 2px solid #e5e5ea;
+            border-radius: 10px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .tap-item:active {
+            transform: scale(0.95);
+        }
+
+        .tap-item.has-score-adl {
+            border-color: #007aff;
+            background-color: rgba(0, 122, 255, 0.05);
+        }
+
+        .tap-item.has-score-mgc {
+            border-color: #34c759;
+            background-color: rgba(52, 199, 89, 0.05);
+        }
+
+        .tap-item.has-score-mgqol {
+            border-color: #af52de;
+            background-color: rgba(175, 82, 222, 0.05);
+        }
+
+        .tap-item-name {
+            font-weight: 600;
+            font-size: 11px;
+            margin-bottom: 4px;
+            color: #1c1c1e;
+        }
+
+        .tap-item-score {
+            font-size: 24px;
+            font-weight: 700;
+            text-align: center;
+        }
+
+        .tap-item.has-score-adl .tap-item-score {
+            color: #007aff;
+        }
+
+        .tap-item.has-score-mgc .tap-item-score {
+            color: #34c759;
+        }
+
+        .tap-item.has-score-mgqol .tap-item-score {
+            color: #af52de;
+        }
+
+        .total {
+            margin-top: 10px;
+            padding: 10px;
+            background-color: #ffffff;
+            border-radius: 10px;
+            text-align: center;
+            font-weight: 600;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="nav">
+        <div class="nav-item active" data-tab="adl">MG-ADL</div>
+        <div class="nav-item" data-tab="mgc">MG-C</div>
+        <div class="nav-item" data-tab="mgqol">MGQOL</div>
+    </div>
+
+    <div id="adl" class="tab-content active"></div>
+    <div id="mgc" class="tab-content"></div>
+    <div id="mgqol" class="tab-content"></div>
+
+    <script>
+        // Streamlitとの通信をセットアップ
+        function initStreamlit() {
+            if (window.parent && window.parent.Streamlit) {
+                return window.parent.Streamlit;
+            }
+            // フォールバック: window.Streamlit
+            if (window.Streamlit) {
+                return window.Streamlit;
+            }
+            return null;
+        }
+
+        const Streamlit = initStreamlit();
+
+        // データ定義
+        const scales = {
+            adl: {
+                items: [
+                    {key: "adl_speech", name: "会話", max: 3},
+                    {key: "adl_chewing", name: "咀嚼", max: 3},
+                    {key: "adl_swallowing", name: "嚥下", max: 3},
+                    {key: "adl_respiration", name: "呼吸", max: 3},
+                    {key: "adl_toothbrushing", name: "歯磨き・櫛", max: 3},
+                    {key: "adl_getting_up", name: "立ち上がり", max: 3},
+                    {key: "adl_diplopia", name: "複視", max: 3},
+                    {key: "adl_ptosis", name: "眼瞼下垂", max: 3}
+                ],
+                maxTotal: 24
+            },
+            mgc: {
+                items: [
+                    {key: "mgc_ptosis", name: "眼瞼下垂", max: 3},
+                    {key: "mgc_diplopia", name: "複視", max: 3},
+                    {key: "mgc_eyelid_closure", name: "閉眼筋力", max: 3},
+                    {key: "mgc_speech", name: "会話 ⚡", max: 3},
+                    {key: "mgc_chewing", name: "咀嚼 ⚡", max: 3},
+                    {key: "mgc_swallowing", name: "嚥下 ⚡", max: 3},
+                    {key: "mgc_respiration", name: "呼吸 ⚡", max: 3},
+                    {key: "mgc_neck", name: "頸部筋力", max: 3},
+                    {key: "mgc_upper_limb", name: "上肢筋力", max: 3},
+                    {key: "mgc_lower_limb", name: "下肢筋力", max: 3}
+                ],
+                maxTotal: 50
+            },
+            mgqol: {
+                items: [
+                    {key: "mgqol_q1", name: "Q1. 不満", max: 2},
+                    {key: "mgqol_q2", name: "Q2. 視覚", max: 2},
+                    {key: "mgqol_q3", name: "Q3. 食事", max: 2},
+                    {key: "mgqol_q4", name: "Q4. 社会活動", max: 2},
+                    {key: "mgqol_q5", name: "Q5. 趣味", max: 2},
+                    {key: "mgqol_q6", name: "Q6. 家族", max: 2},
+                    {key: "mgqol_q7", name: "Q7. 行動工夫", max: 2},
+                    {key: "mgqol_q8", name: "Q8. 仕事", max: 2},
+                    {key: "mgqol_q9", name: "Q9. 話す", max: 2},
+                    {key: "mgqol_q10", name: "Q10. 外出", max: 2},
+                    {key: "mgqol_q11", name: "Q11. 落ち込み", max: 2},
+                    {key: "mgqol_q12", name: "Q12. 歩行", max: 2},
+                    {key: "mgqol_q13", name: "Q13. 行動速度", max: 2},
+                    {key: "mgqol_q14", name: "Q14. 精神的負担", max: 2},
+                    {key: "mgqol_q15", name: "Q15. 身支度", max: 2}
+                ],
+                maxTotal: 30
+            }
+        };
+
+        let currentTab = 'adl';
+        let scores = {};
+
+        // スコア初期化
+        Object.values(scales).forEach(scale => {
+            scale.items.forEach(item => scores[item.key] = 0);
+        });
+
+        // タブ切り替え
+        function switchTab(tab) {
+            currentTab = tab;
+
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.querySelector(`.nav-item[data-tab="${tab}"]`).classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(el => {
+                el.classList.remove('active');
+            });
+            document.getElementById(tab).classList.add('active');
+
+            render();
+        }
+
+        // UI描画
+        function render() {
+            const scale = scales[currentTab];
+            const container = document.getElementById(currentTab);
+
+            let html = '<div class="tap-grid">';
+
+            scale.items.forEach(item => {
+                const score = scores[item.key];
+                const hasScore = score > 0 ? `has-score-${currentTab}` : '';
+                html += `
+                    <div class="tap-item ${hasScore}" data-key="${item.key}" data-max="${item.max}">
+                        <div class="tap-item-name">${item.name}</div>
+                        <div class="tap-item-score">${score}</div>
+                    </div>
+                `;
+            });
+
+            html += '</div>';
+
+            // 合計
+            const total = scale.items.reduce((sum, item) => sum + scores[item.key], 0);
+            html += `<div class="total">合計: ${total}/${scale.maxTotal}</div>`;
+
+            container.innerHTML = html;
+
+            // イベント設定
+            container.querySelectorAll('.tap-item').forEach(el => {
+                el.addEventListener('click', handleTap);
+            });
+        }
+
+        // タップ処理
+        function handleTap(e) {
+            const key = e.currentTarget.dataset.key;
+            const max = parseInt(e.currentTarget.dataset.max);
+
+            scores[key] = (scores[key] + 1) % (max + 1);
+
+            console.log('タップされました:', key, '→', scores[key]);
+            console.log('全スコア:', scores);
+
+            render();
+
+            if (Streamlit) {
+                console.log('Streamlitにデータを送信:', scores);
+                Streamlit.setComponentValue(scores);
+            } else {
+                console.error('Streamlitオブジェクトが見つかりません');
+            }
+        }
+
+        // 初期化
+        function init() {
+            // タブイベント
+            document.querySelectorAll('.nav-item').forEach(el => {
+                el.addEventListener('click', () => switchTab(el.dataset.tab));
+            });
+
+            // 初期描画
+            Object.keys(scales).forEach(tab => {
+                currentTab = tab;
+                render();
+            });
+            currentTab = 'adl';
+
+            if (Streamlit) {
+                Streamlit.setComponentReady();
+                Streamlit.setFrameHeight(600);
+            }
+        }
+
+        // Streamlitイベント
+        if (Streamlit) {
+            Streamlit.events.addEventListener(Streamlit.RENDER_EVENT, (event) => {
+                if (event.detail && event.detail.args && event.detail.args.initial_scores) {
+                    scores = {...event.detail.args.initial_scores};
+                }
+                init();
+            });
+        } else {
+            init();
+        }
+    </script>
+</body>
+</html>
