@@ -54,23 +54,35 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
 
-    /* カラムを強制的に横並びに（モバイルでも） */
-    div[data-testid="column"] {
-        display: flex !important;
-        flex-direction: column !important;
-    }
-
-    /* カラムの親コンテナを横並びに */
-    div.row-widget.stHorizontal {
+    /* Streamlitのカラムシステムを強制的に横並びに（モバイルでも） */
+    div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        gap: 4px;
-        width: 100%;
+        gap: 4px !important;
+        width: 100% !important;
+        flex-wrap: nowrap !important;
     }
 
-    div.row-widget.stHorizontal > div {
-        flex: 1;
-        min-width: 0;
+    div[data-testid="column"] {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        width: auto !important;
+    }
+
+    /* レガシーのStreamlitバージョン対応 */
+    div.row-widget.stHorizontal,
+    div.stColumns {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 4px !important;
+        width: 100% !important;
+        flex-wrap: nowrap !important;
+    }
+
+    div.row-widget.stHorizontal > div,
+    div.stColumns > div {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
     }
 
     /* スコアボタングループのスタイル */
@@ -167,30 +179,57 @@ st.markdown("""
 
         div.stButton > button {
             height: 50px;
-            font-size: 1em;
-            padding: 4px;
+            font-size: 1.1em;
+            padding: 4px 2px;
         }
 
-        div.row-widget.stHorizontal {
-            gap: 3px;
+        div[data-testid="stHorizontalBlock"],
+        div.row-widget.stHorizontal,
+        div.stColumns {
+            gap: 3px !important;
         }
 
         .item-label {
             font-size: 1em;
             padding: 8px;
+            margin-top: 10px;
+            margin-bottom: 5px;
         }
     }
 
     /* 超小型デバイス対応 */
     @media screen and (max-width: 400px) {
         div.stButton > button {
-            height: 45px;
-            font-size: 0.95em;
-            padding: 2px;
+            height: 48px;
+            font-size: 1em;
+            padding: 4px 1px;
+            border-width: 1px;
         }
 
-        div.row-widget.stHorizontal {
-            gap: 2px;
+        div[data-testid="stHorizontalBlock"],
+        div.row-widget.stHorizontal,
+        div.stColumns {
+            gap: 2px !important;
+        }
+
+        .item-label {
+            font-size: 0.95em;
+            padding: 6px;
+        }
+    }
+
+    /* 極小デバイス対応 */
+    @media screen and (max-width: 350px) {
+        div.stButton > button {
+            height: 45px;
+            font-size: 0.95em;
+            padding: 2px 0px;
+        }
+
+        div[data-testid="stHorizontalBlock"],
+        div.row-widget.stHorizontal,
+        div.stColumns {
+            gap: 1px !important;
         }
     }
 </style>
