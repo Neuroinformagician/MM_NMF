@@ -211,6 +211,48 @@ st.markdown("""
     div[data-testid="column"] {
         padding: 0 2px;
     }
+
+    /* 強制的に横並びレイアウト */
+    div[data-testid="stHorizontalBlock"] {
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: nowrap !important;
+        gap: 4px;
+        width: 100% !important;
+    }
+
+    /* カラムを横並びに固定 */
+    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+        flex: 1 1 0 !important;
+        min-width: 0 !important;
+        max-width: none !important;
+    }
+
+    /* スマホでもカラムを横並び維持 */
+    @media screen and (max-width: 640px) {
+        div[data-testid="stHorizontalBlock"] {
+            display: flex !important;
+            flex-direction: row !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            flex: 1 1 0 !important;
+            min-width: 0 !important;
+        }
+    }
+
+    /* ボタンコンテナの調整 */
+    .stButton {
+        width: 100%;
+    }
+
+    /* ボタンのフォントサイズ調整（小画面） */
+    @media screen and (max-width: 380px) {
+        div.stButton > button {
+            font-size: 1.1rem;
+            padding: 0 2px;
+        }
+    }
 </style>
 """, unsafe_allow_html=True)
 
