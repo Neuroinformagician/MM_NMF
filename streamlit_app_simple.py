@@ -41,6 +41,17 @@ st.markdown("""
         max-width: 800px;
         padding-top: 1rem;
         padding-bottom: 1rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+
+    /* 画面幅を超えないように */
+    .main {
+        overflow-x: hidden;
+    }
+
+    .stApp {
+        overflow-x: hidden;
     }
 
     /* ヘッダー */
@@ -58,15 +69,18 @@ st.markdown("""
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
-        gap: 4px !important;
+        gap: 3px !important;
         width: 100% !important;
+        max-width: 100vw !important;
         flex-wrap: nowrap !important;
+        overflow: visible !important;
     }
 
     div[data-testid="column"] {
         flex: 1 1 0 !important;
         min-width: 0 !important;
         width: auto !important;
+        max-width: 25% !important;
     }
 
     /* レガシーのStreamlitバージョン対応 */
@@ -74,15 +88,18 @@ st.markdown("""
     div.stColumns {
         display: flex !important;
         flex-direction: row !important;
-        gap: 4px !important;
+        gap: 3px !important;
         width: 100% !important;
+        max-width: 100vw !important;
         flex-wrap: nowrap !important;
+        overflow: visible !important;
     }
 
     div.row-widget.stHorizontal > div,
     div.stColumns > div {
         flex: 1 1 0 !important;
         min-width: 0 !important;
+        max-width: 25% !important;
     }
 
     /* スコアボタングループのスタイル */
@@ -94,16 +111,21 @@ st.markdown("""
 
     div.stButton > button {
         width: 100%;
+        max-width: 100%;
         height: 60px;
-        font-size: 1.2em;
+        font-size: 1.1em;
         font-weight: 600;
-        border-radius: 10px;
+        border-radius: 8px;
         border: 2px solid #e5e5ea;
         background-color: white;
         color: #1c1c1e;
         transition: all 0.2s ease;
         margin: 0;
-        padding: 8px;
+        padding: 8px 4px;
+        box-sizing: border-box;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
     }
 
     div.stButton > button:hover {
@@ -174,19 +196,21 @@ st.markdown("""
     /* モバイル対応 */
     @media screen and (max-width: 768px) {
         .main .block-container {
-            padding: 0.5rem;
+            padding: 0.5rem 0.3rem;
+            max-width: 100vw;
         }
 
         div.stButton > button {
             height: 50px;
-            font-size: 1.1em;
+            font-size: 0.95em;
             padding: 4px 2px;
+            border-radius: 6px;
         }
 
         div[data-testid="stHorizontalBlock"],
         div.row-widget.stHorizontal,
         div.stColumns {
-            gap: 3px !important;
+            gap: 2px !important;
         }
 
         .item-label {
@@ -201,9 +225,10 @@ st.markdown("""
     @media screen and (max-width: 400px) {
         div.stButton > button {
             height: 48px;
-            font-size: 1em;
+            font-size: 0.9em;
             padding: 4px 1px;
             border-width: 1px;
+            border-radius: 5px;
         }
 
         div[data-testid="stHorizontalBlock"],
@@ -222,14 +247,21 @@ st.markdown("""
     @media screen and (max-width: 350px) {
         div.stButton > button {
             height: 45px;
-            font-size: 0.95em;
+            font-size: 0.85em;
             padding: 2px 0px;
+            border-width: 1px;
+            border-radius: 4px;
         }
 
         div[data-testid="stHorizontalBlock"],
         div.row-widget.stHorizontal,
         div.stColumns {
             gap: 1px !important;
+        }
+
+        .item-label {
+            font-size: 0.9em;
+            padding: 5px;
         }
     }
 </style>
