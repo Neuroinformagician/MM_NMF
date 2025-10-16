@@ -473,108 +473,108 @@ elif st.session_state.current_scale == 3:
 
         st.markdown("---")
 
-            # 予測結果表示（目立つように）
-            ensemble_prob = results['ensemble']
-            classification = results['classification']
-            total_votes = results['total_mm_votes']
-            total_models = results['total_models']
+        # 予測結果表示（目立つように）
+        ensemble_prob = results['ensemble']
+        classification = results['classification']
+        total_votes = results['total_mm_votes']
+        total_models = results['total_models']
         
-            # 確率に応じて色を変更
-            if classification == "MM or better":
-                color = "#4CAF50"  # 緑
-            else:
-                color = "#F44336"  # 赤
-        
-            st.markdown(f"""
-            <div style='background-color: {color}; padding: 20px; border-radius: 10px; text-align: center;'>
-                <h2 style='color: white; margin: 0;'>予測結果</h2>
-                <h1 style='color: white; margin: 10px 0; font-size: 48px;'>{classification}</h1>
-                <h3 style='color: white; margin: 0;'>{total_votes}/3 モデルがMM or better</h3>
-                <p style='color: white; margin: 10px 0; font-size: 14px;'>アンサンブル確率: {ensemble_prob:.1%}</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-            # 入力スコア合計の表示
-            st.markdown("### 入力スコア")
-            score_cols = st.columns(3)
-            with score_cols[0]:
-                adl_total = calculate_total(MGADL_ITEMS, 'adl')
-                st.metric("MG-ADL", f"{adl_total}/24")
-            with score_cols[1]:
-                mgc_total = calculate_total(MGC_ITEMS, 'mgc')
-                st.metric("MG Composite", f"{mgc_total}/50")
-            with score_cols[2]:
-                mgqol_total = calculate_total(MGQOL_ITEMS, 'mgqol')
-                st.metric("MGQOL-15r", f"{mgqol_total}/30")
-        
-            # 各モデルの予測詳細
-            st.markdown("### 各モデルの予測")
-        
-            # 詳細情報（折りたたみ）
-            with st.expander("📊 詳細"):
-                st.write("**各モデルの詳細データ:**")
-                for model_name, vote_info in results['model_votes'].items():
-                    st.write(f"**{model_name}**")
-                    st.write(f"  - 確率: {vote_info['probability']:.6f}")
-                    st.write(f"  - カットオフ: {vote_info['cutoff']:.6f}")
-                    st.write(f"  - 判定: {vote_info['prediction']}")
-        
-                st.write("\n**5-fold予測値:**")
-                for model_name, probs in results['predictions'].items():
-                    st.write(f"**{model_name}**: {[f'{p:.4f}' for p in probs]}")
-        
-            cols = st.columns(3)
-            for i, (model_name, vote_info) in enumerate(results['model_votes'].items()):
-                with cols[i]:
-                    prob = vote_info['probability']
-                    cutoff = vote_info['cutoff']
-                    pred = vote_info['prediction']
-        
-                    # カラー: MM or better なら緑、そうでなければ赤
-                    if pred == "MM or better":
-                        badge_color = "#4CAF50"
-                        icon = "✓"
-                    else:
-                        badge_color = "#F44336"
-                        icon = "✗"
-        
-                    st.markdown(f"""
-                    <div style='padding: 15px; border: 2px solid {badge_color}; border-radius: 10px; text-align: center;'>
-                        <div style='font-weight: bold; font-size: 14px; margin-bottom: 5px;'>{model_name}</div>
-                        <div style='font-size: 24px; font-weight: bold; color: {badge_color};'>{prob:.1%}</div>
-                        <div style='font-size: 20px; margin-top: 5px;'>{icon}</div>
-                    </div>
-                    """, unsafe_allow_html=True)
-        
-            # モジュールスコア表示
-            st.markdown("### モジュールスコア")
-        
-            module_df = results['module_scores'].copy()
-            module_df.columns = [col.replace('module ', '').title() for col in module_df.columns]
-        
-            cols = st.columns(4)
-            for i, (col_name, value) in enumerate(module_df.iloc[0].items()):
-                with cols[i]:
-                    st.metric(col_name, f"{value:.4f}")
-        
-            # レーダーチャート
-            st.markdown("### 比較チャート")
-        
-            comparison = results['comparison']
-            patient_scores = results['module_scores'].values[0]
-        
-            fig = create_radar_chart(
-                patient_scores=patient_scores,
-                mm_avg=comparison['mm_avg'],
-                non_mm_avg=comparison['non_mm_avg'],
-                module_names=comparison['module_names'],
-                ensemble_prob=ensemble_prob
-            )
-        
-            st.plotly_chart(fig, use_container_width=True)
-        
+        # 確率に応じて色を変更
+        if classification == "MM or better":
+            color = "#4CAF50"  # 緑
         else:
-            st.info("予測を実行中です...")
+            color = "#F44336"  # 赤
+        
+        st.markdown(f"""
+        <div style='background-color: {color}; padding: 20px; border-radius: 10px; text-align: center;'>
+            <h2 style='color: white; margin: 0;'>予測結果</h2>
+            <h1 style='color: white; margin: 10px 0; font-size: 48px;'>{classification}</h1>
+            <h3 style='color: white; margin: 0;'>{total_votes}/3 モデルがMM or better</h3>
+            <p style='color: white; margin: 10px 0; font-size: 14px;'>アンサンブル確率: {ensemble_prob:.1%}</p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        # 入力スコア合計の表示
+        st.markdown("### 入力スコア")
+        score_cols = st.columns(3)
+        with score_cols[0]:
+            adl_total = calculate_total(MGADL_ITEMS, 'adl')
+            st.metric("MG-ADL", f"{adl_total}/24")
+        with score_cols[1]:
+            mgc_total = calculate_total(MGC_ITEMS, 'mgc')
+            st.metric("MG Composite", f"{mgc_total}/50")
+        with score_cols[2]:
+            mgqol_total = calculate_total(MGQOL_ITEMS, 'mgqol')
+            st.metric("MGQOL-15r", f"{mgqol_total}/30")
+        
+        # 各モデルの予測詳細
+        st.markdown("### 各モデルの予測")
+        
+        # 詳細情報（折りたたみ）
+        with st.expander("📊 詳細"):
+            st.write("**各モデルの詳細データ:**")
+            for model_name, vote_info in results['model_votes'].items():
+                st.write(f"**{model_name}**")
+                st.write(f"  - 確率: {vote_info['probability']:.6f}")
+                st.write(f"  - カットオフ: {vote_info['cutoff']:.6f}")
+                st.write(f"  - 判定: {vote_info['prediction']}")
+        
+            st.write("\n**5-fold予測値:**")
+            for model_name, probs in results['predictions'].items():
+                st.write(f"**{model_name}**: {[f'{p:.4f}' for p in probs]}")
+        
+        cols = st.columns(3)
+        for i, (model_name, vote_info) in enumerate(results['model_votes'].items()):
+            with cols[i]:
+                prob = vote_info['probability']
+                cutoff = vote_info['cutoff']
+                pred = vote_info['prediction']
+        
+                # カラー: MM or better なら緑、そうでなければ赤
+                if pred == "MM or better":
+                    badge_color = "#4CAF50"
+                    icon = "✓"
+                else:
+                    badge_color = "#F44336"
+                    icon = "✗"
+        
+                st.markdown(f"""
+                <div style='padding: 15px; border: 2px solid {badge_color}; border-radius: 10px; text-align: center;'>
+                    <div style='font-weight: bold; font-size: 14px; margin-bottom: 5px;'>{model_name}</div>
+                    <div style='font-size: 24px; font-weight: bold; color: {badge_color};'>{prob:.1%}</div>
+                    <div style='font-size: 20px; margin-top: 5px;'>{icon}</div>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        # モジュールスコア表示
+        st.markdown("### モジュールスコア")
+        
+        module_df = results['module_scores'].copy()
+        module_df.columns = [col.replace('module ', '').title() for col in module_df.columns]
+        
+        cols = st.columns(4)
+        for i, (col_name, value) in enumerate(module_df.iloc[0].items()):
+            with cols[i]:
+                st.metric(col_name, f"{value:.4f}")
+        
+        # レーダーチャート
+        st.markdown("### 比較チャート")
+        
+        comparison = results['comparison']
+        patient_scores = results['module_scores'].values[0]
+        
+        fig = create_radar_chart(
+            patient_scores=patient_scores,
+            mm_avg=comparison['mm_avg'],
+            non_mm_avg=comparison['non_mm_avg'],
+            module_names=comparison['module_names'],
+            ensemble_prob=ensemble_prob
+        )
+        
+        st.plotly_chart(fig, use_container_width=True)
+
+    else:
+        st.info("予測を実行中です...")
 
     # ナビゲーションボタン
     st.markdown("---")
