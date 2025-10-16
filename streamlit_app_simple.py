@@ -25,14 +25,19 @@ st.set_page_config(
     layout="wide"
 )
 
-# カスタムCSSでボタンにタップエフェクトを追加
+# カスタムCSSでモバイル対応とボタンエフェクトを追加
 st.markdown("""
 <style>
-    /* ボタンにホバー＆アクティブエフェクト */
+    /* モバイル対応: ボタンを大きく */
     div.stButton > button {
         transition: all 0.2s ease;
         position: relative;
         overflow: hidden;
+        min-height: 60px;
+        font-size: 1.3em;
+        font-weight: 600;
+        padding: 15px 20px;
+        width: 100%;
     }
 
     div.stButton > button:hover {
@@ -73,14 +78,47 @@ st.markdown("""
     /* プライマリボタン（予測実行）を目立たせる */
     div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        font-weight: 600;
-        font-size: 1.1em;
+        font-weight: 700;
+        font-size: 1.4em;
+        min-height: 70px;
     }
 
     div.stButton > button[kind="primary"]:hover {
         background: linear-gradient(135deg, #764ba2 0%, #667eea 100%);
     }
+
+    /* モバイル: 項目名のフォントサイズ調整 */
+    .stMarkdown h4 {
+        font-size: 1.1em;
+        margin-bottom: 10px;
+    }
 </style>
+
+<script>
+    // スクロール位置を保存・復元（rerun時に一番上に戻るのを防ぐ）
+    window.addEventListener('beforeunload', function() {
+        sessionStorage.setItem('scrollPosition', window.scrollY);
+    });
+
+    window.addEventListener('load', function() {
+        const scrollPosition = sessionStorage.getItem('scrollPosition');
+        if (scrollPosition !== null) {
+            window.scrollTo(0, parseInt(scrollPosition));
+        }
+    });
+
+    // Streamlit rerun時にもスクロール位置を保持
+    const observer = new MutationObserver(function() {
+        const scrollPosition = sessionStorage.getItem('scrollPosition');
+        if (scrollPosition !== null) {
+            setTimeout(function() {
+                window.scrollTo(0, parseInt(scrollPosition));
+            }, 100);
+        }
+    });
+
+    observer.observe(document.body, { childList: true, subtree: true });
+</script>
 """, unsafe_allow_html=True)
 
 # ============================================================================
