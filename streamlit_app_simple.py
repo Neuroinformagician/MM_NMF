@@ -244,6 +244,14 @@ def go_to_scale(scale_index):
 
 st.title("MG予測システム")
 
+# スクロールマーカー（JavaScriptが検知用）- 最上部に配置
+if st.session_state.scroll_action == 'top':
+    st.markdown('<div style="display:none">SCROLL_TO_TOP</div>', unsafe_allow_html=True)
+    st.session_state.scroll_action = None
+elif st.session_state.scroll_action == 'results':
+    st.markdown('<div style="display:none">SCROLL_TO_RESULTS</div>', unsafe_allow_html=True)
+    st.session_state.scroll_action = None
+
 # 進捗インジケーター
 progress_labels = ["MG-ADL", "MG Composite", "MGQOL-15r"]
 cols = st.columns(3)
@@ -414,8 +422,6 @@ if 'predict_btn' in locals() and predict_btn:
                 "comparison": comparison
             }
             st.session_state.scroll_action = 'results'
-
-            st.success("✅ 予測完了！")
             st.rerun()
 
         except FileNotFoundError as e:
@@ -430,14 +436,6 @@ if 'predict_btn' in locals() and predict_btn:
 
 if st.session_state.prediction_results is not None:
     results = st.session_state.prediction_results
-
-    # スクロールマーカー（JavaScriptが検知用）
-    if st.session_state.scroll_action == 'top':
-        st.markdown('<div style="display:none">SCROLL_TO_TOP</div>', unsafe_allow_html=True)
-        st.session_state.scroll_action = None
-    elif st.session_state.scroll_action == 'results':
-        st.markdown('<div style="display:none">SCROLL_TO_RESULTS</div>', unsafe_allow_html=True)
-        st.session_state.scroll_action = None
 
     st.markdown("---")
     st.markdown('<div id="prediction-results"></div>', unsafe_allow_html=True)
