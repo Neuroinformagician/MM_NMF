@@ -141,46 +141,65 @@ st.markdown("""
         border-color: #007aff;
     }
 
-    /* 選択されたボタン */
-    div.stButton > button[data-selected="true"] {
+    /* プライマリボタン（選択状態）のデフォルトスタイル */
+    div.stButton > button[kind="primary"] {
+        background: #007aff !important;
+        color: white !important;
+        border: 2px solid #007aff !important;
+        height: 48px;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    div.stButton > button[kind="primary"]:hover {
+        background: #0051d5 !important;
+        border-color: #0051d5 !important;
+    }
+
+    /* セカンダリボタン（未選択状態） */
+    div.stButton > button[kind="secondary"] {
+        background: white;
+        color: #666;
+        border: 2px solid #e5e5ea;
+        height: 48px;
+        font-size: 1rem;
+        font-weight: 600;
+    }
+
+    div.stButton > button[kind="secondary"]:hover {
+        background: #f5f5f5;
+        border-color: #ccc;
+    }
+
+    /* セクションごとの色分け（上書き） */
+    /* ADLセクション内のプライマリボタン（青） */
+    .adl-section div.stButton > button[kind="primary"] {
         background: #007aff !important;
         border-color: #007aff !important;
-        color: white !important;
     }
 
-    /* Streamlit のプライマリボタンを色分け - より包括的なセレクタ */
-
-    /* ADLセクション内の選択されたボタン（青） */
-    .adl-section .stButton > button:not([style*="background-color: white"]):not([style*="rgb(255, 255, 255)"]) {
-        background-color: #007aff !important;
-        border-color: #007aff !important;
+    .adl-section div.stButton > button[kind="primary"]:hover {
+        background: #0051d5 !important;
     }
 
-    .adl-section button[data-testid*="baseButton-primary"] {
-        background-color: #007aff !important;
-        border-color: #007aff !important;
-    }
-
-    /* MGCセクション内の選択されたボタン（緑） */
-    .mgc-section .stButton > button:not([style*="background-color: white"]):not([style*="rgb(255, 255, 255)"]) {
-        background-color: #34c759 !important;
+    /* MGCセクション内のプライマリボタン（緑） */
+    .mgc-section div.stButton > button[kind="primary"] {
+        background: #34c759 !important;
         border-color: #34c759 !important;
     }
 
-    .mgc-section button[data-testid*="baseButton-primary"] {
-        background-color: #34c759 !important;
-        border-color: #34c759 !important;
+    .mgc-section div.stButton > button[kind="primary"]:hover {
+        background: #28a745 !important;
     }
 
-    /* MGQOLセクション内の選択されたボタン（紫） */
-    .mgqol-section .stButton > button:not([style*="background-color: white"]):not([style*="rgb(255, 255, 255)"]) {
-        background-color: #af52de !important;
+    /* MGQOLセクション内のプライマリボタン（紫） */
+    .mgqol-section div.stButton > button[kind="primary"] {
+        background: #af52de !important;
         border-color: #af52de !important;
     }
 
-    .mgqol-section button[data-testid*="baseButton-primary"] {
-        background-color: #af52de !important;
-        border-color: #af52de !important;
+    .mgqol-section div.stButton > button[kind="primary"]:hover {
+        background: #9437c3 !important;
     }
 
     /* 合計表示 */
@@ -247,84 +266,8 @@ st.markdown("""
     // ページロード時に画面上部にスクロール
     window.scrollTo(0, 0);
 
-    // 選択されたボタンに色を適用する
-    function applyButtonColors() {
-        // ADLセクション内のボタン
-        const adlSection = document.querySelector('.adl-section');
-        if (adlSection) {
-            adlSection.querySelectorAll('.stButton button').forEach(button => {
-                const style = button.getAttribute('style') || '';
-                const computedStyle = window.getComputedStyle(button);
-
-                // 白いテキストまたは選択された背景色のボタンを判定
-                const isWhiteText = computedStyle.color === 'rgb(255, 255, 255)' ||
-                                   computedStyle.color === 'white';
-                const hasColoredBg = !computedStyle.backgroundColor.includes('255, 255, 255') &&
-                                    !computedStyle.backgroundColor.includes('transparent');
-
-                if (isWhiteText || hasColoredBg) {
-                    button.style.setProperty('background-color', '#007aff', 'important');
-                    button.style.setProperty('border-color', '#007aff', 'important');
-                    button.style.setProperty('color', 'white', 'important');
-                }
-            });
-        }
-
-        // MGCセクション内のボタン
-        const mgcSection = document.querySelector('.mgc-section');
-        if (mgcSection) {
-            mgcSection.querySelectorAll('.stButton button').forEach(button => {
-                const computedStyle = window.getComputedStyle(button);
-
-                const isWhiteText = computedStyle.color === 'rgb(255, 255, 255)' ||
-                                   computedStyle.color === 'white';
-                const hasColoredBg = !computedStyle.backgroundColor.includes('255, 255, 255') &&
-                                    !computedStyle.backgroundColor.includes('transparent');
-
-                if (isWhiteText || hasColoredBg) {
-                    button.style.setProperty('background-color', '#34c759', 'important');
-                    button.style.setProperty('border-color', '#34c759', 'important');
-                    button.style.setProperty('color', 'white', 'important');
-                }
-            });
-        }
-
-        // MGQOLセクション内のボタン
-        const mgqolSection = document.querySelector('.mgqol-section');
-        if (mgqolSection) {
-            mgqolSection.querySelectorAll('.stButton button').forEach(button => {
-                const computedStyle = window.getComputedStyle(button);
-
-                const isWhiteText = computedStyle.color === 'rgb(255, 255, 255)' ||
-                                   computedStyle.color === 'white';
-                const hasColoredBg = !computedStyle.backgroundColor.includes('255, 255, 255') &&
-                                    !computedStyle.backgroundColor.includes('transparent');
-
-                if (isWhiteText || hasColoredBg) {
-                    button.style.setProperty('background-color', '#af52de', 'important');
-                    button.style.setProperty('border-color', '#af52de', 'important');
-                    button.style.setProperty('color', 'white', 'important');
-                }
-            });
-        }
-    }
-
-    // 初期実行を複数回実行して確実に適用
-    setTimeout(applyButtonColors, 100);
-    setTimeout(applyButtonColors, 300);
-    setTimeout(applyButtonColors, 500);
-    setTimeout(applyButtonColors, 1000);
-
-    // Streamlitが再描画した際にも実行
-    let timeoutId;
-    const observer = new MutationObserver(() => {
-        clearTimeout(timeoutId);
-        timeoutId = setTimeout(applyButtonColors, 50);
-    });
-
-    if (document.body) {
-        observer.observe(document.body, { childList: true, subtree: true, attributes: true });
-    }
+    // CSSで対応しているため、JavaScriptは最小限に
+    // Streamlitの遅延レンダリングに対応する必要がある場合のみ
 </script>
 """, unsafe_allow_html=True)
 
