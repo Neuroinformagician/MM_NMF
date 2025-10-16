@@ -143,17 +143,17 @@ st.markdown("""
 
     /* プライマリボタン（選択状態）のデフォルトスタイル */
     div.stButton > button[kind="primary"] {
-        background: #007aff !important;
+        background: #007aff;
         color: white !important;
-        border: 2px solid #007aff !important;
+        border: 2px solid #007aff;
         height: 48px;
         font-size: 1rem;
         font-weight: 600;
     }
 
     div.stButton > button[kind="primary"]:hover {
-        background: #0051d5 !important;
-        border-color: #0051d5 !important;
+        background: #0051d5;
+        border-color: #0051d5;
     }
 
     /* セカンダリボタン（未選択状態） */
@@ -171,35 +171,29 @@ st.markdown("""
         border-color: #ccc;
     }
 
-    /* セクションごとの色分け（上書き） */
-    /* ADLセクション内のプライマリボタン（青） */
-    .adl-section div.stButton > button[kind="primary"] {
-        background: #007aff !important;
-        border-color: #007aff !important;
-    }
-
-    .adl-section div.stButton > button[kind="primary"]:hover {
-        background: #0051d5 !important;
-    }
+    /* セクションごとの色分け（より強い優先順位） */
+    /* ADLセクション内のプライマリボタン（青） - デフォルトなので変更なし */
 
     /* MGCセクション内のプライマリボタン（緑） */
-    .mgc-section div.stButton > button[kind="primary"] {
-        background: #34c759 !important;
+    div.mgc-section div.stButton > button[kind="primary"] {
+        background-color: #34c759 !important;
         border-color: #34c759 !important;
     }
 
-    .mgc-section div.stButton > button[kind="primary"]:hover {
-        background: #28a745 !important;
+    div.mgc-section div.stButton > button[kind="primary"]:hover {
+        background-color: #28a745 !important;
+        border-color: #28a745 !important;
     }
 
     /* MGQOLセクション内のプライマリボタン（紫） */
-    .mgqol-section div.stButton > button[kind="primary"] {
-        background: #af52de !important;
+    div.mgqol-section div.stButton > button[kind="primary"] {
+        background-color: #af52de !important;
         border-color: #af52de !important;
     }
 
-    .mgqol-section div.stButton > button[kind="primary"]:hover {
-        background: #9437c3 !important;
+    div.mgqol-section div.stButton > button[kind="primary"]:hover {
+        background-color: #9437c3 !important;
+        border-color: #9437c3 !important;
     }
 
     /* 合計表示 */
@@ -266,8 +260,55 @@ st.markdown("""
     // ページロード時に画面上部にスクロール
     window.scrollTo(0, 0);
 
-    // CSSで対応しているため、JavaScriptは最小限に
-    // Streamlitの遅延レンダリングに対応する必要がある場合のみ
+    // セクションごとに選択されたボタンの色を変える
+    function applySectionColors() {
+        // 現在どのセクションが表示されているか判定
+        const currentScale = document.querySelector('[data-testid="stHorizontalBlock"]');
+        const allButtons = document.querySelectorAll('div.stButton > button[kind="primary"]');
+
+        if (!allButtons.length) return;
+
+        // ヘッダーテキストで現在のセクションを判定
+        const headers = document.querySelectorAll('h2');
+        let sectionType = 'adl'; // デフォルト
+
+        headers.forEach(header => {
+            const text = header.textContent;
+            if (text.includes('MG-ADL')) {
+                sectionType = 'adl';
+            } else if (text.includes('MG Composite')) {
+                sectionType = 'mgc';
+            } else if (text.includes('MGQOL-15r')) {
+                sectionType = 'mgqol';
+            }
+        });
+
+        // 色を適用
+        allButtons.forEach(button => {
+            if (sectionType === 'mgc') {
+                button.style.backgroundColor = '#34c759';
+                button.style.borderColor = '#34c759';
+            } else if (sectionType === 'mgqol') {
+                button.style.backgroundColor = '#af52de';
+                button.style.borderColor = '#af52de';
+            } else {
+                button.style.backgroundColor = '#007aff';
+                button.style.borderColor = '#007aff';
+            }
+        });
+    }
+
+    // 初期実行と監視
+    setTimeout(applySectionColors, 100);
+    setTimeout(applySectionColors, 500);
+
+    const observer = new MutationObserver(() => {
+        setTimeout(applySectionColors, 50);
+    });
+
+    if (document.body) {
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
 </script>
 """, unsafe_allow_html=True)
 
