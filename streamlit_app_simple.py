@@ -26,8 +26,27 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
+# ============================================================================
+# セッション状態の初期化（CSSより先に）
+# ============================================================================
+
+if 'scores' not in st.session_state:
+    st.session_state.scores = {}
+
+if 'prediction_results' not in st.session_state:
+    st.session_state.prediction_results = None
+
+if 'predictor' not in st.session_state:
+    st.session_state.predictor = None
+
+if 'current_scale' not in st.session_state:
+    st.session_state.current_scale = 0
+
+# 現在のスケールに基づいてCSSを動的に生成
+current_scale = st.session_state.current_scale
+
 # カスタムCSS
-st.markdown("""
+st.markdown(f"""
 <style>
     /* 基本設定 */
     * {
@@ -171,27 +190,36 @@ st.markdown("""
         border-color: #ccc;
     }
 
-    /* セクションごとの色分け（より強い優先順位） */
-    /* ADLセクション内のプライマリボタン（青） - デフォルトなので変更なし */
+    /* セクションごとの色分け - data属性を使用 */
+    /* ADLセクション（青） - デフォルト */
+    body[data-scale="0"] div.stButton > button[kind="primary"] {
+        background-color: #007aff !important;
+        border-color: #007aff !important;
+    }
 
-    /* MGCセクション内のプライマリボタン（緑） */
-    div.mgc-section div.stButton > button[kind="primary"] {
+    body[data-scale="0"] div.stButton > button[kind="primary"]:hover {
+        background-color: #0051d5 !important;
+        border-color: #0051d5 !important;
+    }
+
+    /* MGCセクション（緑） */
+    body[data-scale="1"] div.stButton > button[kind="primary"] {
         background-color: #34c759 !important;
         border-color: #34c759 !important;
     }
 
-    div.mgc-section div.stButton > button[kind="primary"]:hover {
+    body[data-scale="1"] div.stButton > button[kind="primary"]:hover {
         background-color: #28a745 !important;
         border-color: #28a745 !important;
     }
 
-    /* MGQOLセクション内のプライマリボタン（紫） */
-    div.mgqol-section div.stButton > button[kind="primary"] {
+    /* MGQOLセクション（紫） */
+    body[data-scale="2"] div.stButton > button[kind="primary"] {
         background-color: #af52de !important;
         border-color: #af52de !important;
     }
 
-    div.mgqol-section div.stButton > button[kind="primary"]:hover {
+    body[data-scale="2"] div.stButton > button[kind="primary"]:hover {
         background-color: #9437c3 !important;
         border-color: #9437c3 !important;
     }
@@ -260,73 +288,26 @@ st.markdown("""
     // ページロード時に画面上部にスクロール
     window.scrollTo(0, 0);
 
-    // セクションごとに選択されたボタンの色を変える
-    function applySectionColors() {
-        // 現在どのセクションが表示されているか判定
-        const currentScale = document.querySelector('[data-testid="stHorizontalBlock"]');
-        const allButtons = document.querySelectorAll('div.stButton > button[kind="primary"]');
+    // Pythonから直接現在のスケール値を埋め込む
+    const currentScale = {current_scale};
 
-        if (!allButtons.length) return;
+    // bodyタグにdata-scale属性を設定
+    function setScaleAttribute() {{
+        document.body.setAttribute('data-scale', currentScale);
+    }}
 
-        // ヘッダーテキストで現在のセクションを判定
-        const headers = document.querySelectorAll('h2');
-        let sectionType = 'adl'; // デフォルト
+    // DOMが読み込まれたら実行
+    if (document.body) {{
+        setScaleAttribute();
+    }} else {{
+        document.addEventListener('DOMContentLoaded', setScaleAttribute);
+    }}
 
-        headers.forEach(header => {
-            const text = header.textContent;
-            if (text.includes('MG-ADL')) {
-                sectionType = 'adl';
-            } else if (text.includes('MG Composite')) {
-                sectionType = 'mgc';
-            } else if (text.includes('MGQOL-15r')) {
-                sectionType = 'mgqol';
-            }
-        });
-
-        // 色を適用
-        allButtons.forEach(button => {
-            if (sectionType === 'mgc') {
-                button.style.backgroundColor = '#34c759';
-                button.style.borderColor = '#34c759';
-            } else if (sectionType === 'mgqol') {
-                button.style.backgroundColor = '#af52de';
-                button.style.borderColor = '#af52de';
-            } else {
-                button.style.backgroundColor = '#007aff';
-                button.style.borderColor = '#007aff';
-            }
-        });
-    }
-
-    // 初期実行と監視
-    setTimeout(applySectionColors, 100);
-    setTimeout(applySectionColors, 500);
-
-    const observer = new MutationObserver(() => {
-        setTimeout(applySectionColors, 50);
-    });
-
-    if (document.body) {
-        observer.observe(document.body, { childList: true, subtree: true });
-    }
+    // 念のため遅延実行も追加
+    setTimeout(setScaleAttribute, 100);
+    setTimeout(setScaleAttribute, 300);
 </script>
 """, unsafe_allow_html=True)
-
-# ============================================================================
-# セッション状態の初期化
-# ============================================================================
-
-if 'scores' not in st.session_state:
-    st.session_state.scores = {}
-
-if 'prediction_results' not in st.session_state:
-    st.session_state.prediction_results = None
-
-if 'predictor' not in st.session_state:
-    st.session_state.predictor = None
-
-if 'current_scale' not in st.session_state:
-    st.session_state.current_scale = 0
 
 # ============================================================================
 # ヘルパー関数
