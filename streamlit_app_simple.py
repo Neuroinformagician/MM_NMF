@@ -28,11 +28,11 @@ st.set_page_config(
 # カスタムCSSでモバイル対応とボタンエフェクトを追加
 st.markdown("""
 <style>
-    /* モバイル対応: ボタンを大きく */
+    /* モバイル対応: ボタンを大きく + 楽しいエフェクト */
     div.stButton > button {
-        transition: all 0.2s ease;
+        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         position: relative;
-        overflow: hidden;
+        overflow: visible;
         min-height: 60px;
         font-size: 1.3em;
         font-weight: 600;
@@ -41,13 +41,22 @@ st.markdown("""
     }
 
     div.stButton > button:hover {
-        transform: scale(1.05);
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        transform: scale(1.08);
+        box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
     }
 
     div.stButton > button:active {
-        transform: scale(0.95);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        animation: bouncePress 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transform: scale(0.92);
+    }
+
+    /* ぽわわんエフェクト */
+    @keyframes bouncePress {
+        0% { transform: scale(1); }
+        25% { transform: scale(0.85); }
+        50% { transform: scale(1.1); }
+        75% { transform: scale(0.95); }
+        100% { transform: scale(1); }
     }
 
     /* ボタンクリック時の波紋エフェクト */
@@ -95,7 +104,27 @@ st.markdown("""
 
     /* タップ時の即座のフィードバック */
     div.stButton > button:active {
-        opacity: 0.7;
+        opacity: 0.8;
+    }
+
+    /* キラキラエフェクト */
+    @keyframes sparkle {
+        0%, 100% { opacity: 0; transform: scale(0); }
+        50% { opacity: 1; transform: scale(1); }
+    }
+
+    div.stButton > button::before {
+        content: '✨';
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        font-size: 1.5em;
+        opacity: 0;
+        pointer-events: none;
+    }
+
+    div.stButton > button:active::before {
+        animation: sparkle 0.6s ease-out;
     }
 </style>
 
@@ -135,20 +164,51 @@ st.markdown("""
 
         if (scrollAction === 'top') {
             setTimeout(() => {
-                window.scrollTo({ top: 0, behavior: 'smooth' });
-                sessionStorage.removeItem('scrollPosition');
-            }, 100);
-        } else if (scrollAction === 'results') {
-            setTimeout(() => {
-                const resultsElement = document.getElementById('prediction-results');
-                if (resultsElement) {
-                    resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                // 具体的なヘッダーを探してスクロール
+                const headers = document.querySelectorAll('h2');
+                let targetHeader = null;
+
+                for (let h of headers) {
+                    if (h.textContent.includes('MG Composite') ||
+                        h.textContent.includes('MGQOL-15r')) {
+                        targetHeader = h;
+                        break;
+                    }
+                }
+
+                if (targetHeader) {
+                    targetHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
                 } else {
-                    // フォールバック: ページの下部にスクロール
-                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
                 }
                 sessionStorage.removeItem('scrollPosition');
-            }, 300);
+            }, 200);
+        } else if (scrollAction === 'results') {
+            setTimeout(() => {
+                // 「MM or better」または「non MM」を探す
+                const allElements = document.body.getElementsByTagName('*');
+                let targetElement = null;
+
+                for (let el of allElements) {
+                    const text = el.textContent || '';
+                    if (text.includes('MM or better') || text.includes('non MM')) {
+                        // 親要素を探して、見出しの近くを探す
+                        targetElement = el;
+                        break;
+                    }
+                }
+
+                if (targetElement) {
+                    // 少し上にオフセットしてスクロール
+                    const yOffset = -20;
+                    const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
+                    window.scrollTo({ top: y, behavior: 'smooth' });
+                } else {
+                    // フォールバック: ページの下半分にスクロール
+                    window.scrollTo({ top: document.body.scrollHeight * 0.6, behavior: 'smooth' });
+                }
+                sessionStorage.removeItem('scrollPosition');
+            }, 400);
         } else if (!scrollAction) {
             // 通常はスクロール位置を保持
             const scrollPosition = sessionStorage.getItem('scrollPosition');
