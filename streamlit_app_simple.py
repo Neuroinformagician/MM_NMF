@@ -49,18 +49,29 @@ st.markdown("""
         animation: jiggle 0.5s ease-in-out;
     }
 
-    /* プルプル揺れるアニメーション */
+    /* 小刻みに縮小拡大アニメーション */
     @keyframes jiggle {
-        0%, 100% { transform: rotate(0deg) scale(1); }
-        10% { transform: rotate(-3deg) scale(0.95); }
-        20% { transform: rotate(3deg) scale(1.05); }
-        30% { transform: rotate(-3deg) scale(0.98); }
-        40% { transform: rotate(3deg) scale(1.03); }
-        50% { transform: rotate(-2deg) scale(0.99); }
-        60% { transform: rotate(2deg) scale(1.02); }
-        70% { transform: rotate(-1deg) scale(1); }
-        80% { transform: rotate(1deg) scale(1.01); }
-        90% { transform: rotate(-0.5deg) scale(1); }
+        0% { transform: scale(1); }
+        5% { transform: scale(0.95); }
+        10% { transform: scale(1.02); }
+        15% { transform: scale(0.97); }
+        20% { transform: scale(1.04); }
+        25% { transform: scale(0.98); }
+        30% { transform: scale(1.06); }
+        35% { transform: scale(0.99); }
+        40% { transform: scale(1.08); }
+        45% { transform: scale(1.0); }
+        50% { transform: scale(1.1); }
+        55% { transform: scale(1.01); }
+        60% { transform: scale(1.11); }
+        65% { transform: scale(1.02); }
+        70% { transform: scale(1.12); }
+        75% { transform: scale(1.03); }
+        80% { transform: scale(1.1); }
+        85% { transform: scale(1.02); }
+        90% { transform: scale(1.05); }
+        95% { transform: scale(1.01); }
+        100% { transform: scale(1); }
     }
 
     /* ボタンクリック時の波紋エフェクト */
@@ -580,16 +591,8 @@ elif st.session_state.current_scale == 3:
             ensemble_prob=ensemble_prob
         )
 
-        # モバイル最適化: ツールバー非表示、スクロールズーム無効
-        st.plotly_chart(
-            fig,
-            use_container_width=True,
-            config={
-                'displayModeBar': False,
-                'scrollZoom': False,
-                'displaylogo': False
-            }
-        )
+        # matplotlib チャートを表示
+        st.pyplot(fig, use_container_width=True)
 
     else:
         st.info("予測を実行中です...")

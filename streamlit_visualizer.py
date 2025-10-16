@@ -1,15 +1,17 @@
 """
 Streamlit MG Prediction App - Visualizer
-可視化ロジック: Plotlyによるインタラクティブレーダーチャート
+可視化ロジック: Matplotlibによるレーダーチャート
 """
 
-import plotly.graph_objects as go
+import matplotlib.pyplot as plt
 import numpy as np
+from matplotlib.patches import Circle
+import matplotlib.font_manager as fm
 
 
 def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensemble_prob):
     """
-    レーダーチャートを作成
+    レーダーチャートを作成（matplotlib使用）
 
     Parameters
     ----------
@@ -26,7 +28,7 @@ def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensembl
 
     Returns
     -------
-    plotly.graph_objects.Figure
+    matplotlib.figure.Figure
         レーダーチャート
     """
     # データ保護（コピー）
@@ -37,96 +39,63 @@ def create_radar_chart(patient_scores, mm_avg, non_mm_avg, module_names, ensembl
     # モジュール名を整形
     labels = [name.replace('module ', '').title() for name in module_names]
 
-    # 閉じた形にする（最初の値を最後に追加）
+    # データの最大値を取得
+    max_val = max(
+        np.max(patient_scores),
+        np.max(mm_avg),
+        np.max(non_mm_avg)
+    )
+    display_range = max(0.15, max_val * 1.1)
+
+    # 角度を計算
+    num_vars = len(labels)
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+
+    # データを閉じた形にする
     patient_closed = np.concatenate([patient_scores, [patient_scores[0]]])
     mm_closed = np.concatenate([mm_avg, [mm_avg[0]]])
     non_mm_closed = np.concatenate([non_mm_avg, [non_mm_avg[0]]])
-    labels_closed = labels + [labels[0]]
+    angles_closed = angles + [angles[0]]
 
-    # Figureを作成
-    fig = go.Figure()
+    # Figure作成（大きめに）
+    fig, ax = plt.subplots(figsize=(10, 10), subplot_kw=dict(projection='polar'))
+
+    # 背景を白に
+    fig.patch.set_facecolor('white')
+    ax.set_facecolor('white')
 
     # non-MM群（薄い赤系）
-    fig.add_trace(go.Scatterpolar(
-        r=non_mm_closed,
-        theta=labels_closed,
-        fill='toself',
-        fillcolor='rgba(255, 107, 107, 0.08)',
-        line=dict(color='rgba(255, 107, 107, 0.4)', width=2),
-        marker=dict(size=6, color='rgba(255, 107, 107, 0.4)'),
-        name='non MM (mean)',
-        hovertemplate='<b>%{theta}</b><br>Score: %{r:.4f}<extra></extra>'
-    ))
+    ax.plot(angles_closed, non_mm_closed, 'o-', linewidth=3,
+            color='#FF6B6B', alpha=0.6, label='non MM (mean)', markersize=8)
+    ax.fill(angles_closed, non_mm_closed, alpha=0.15, color='#FF6B6B')
 
     # MM群（薄い青緑系）
-    fig.add_trace(go.Scatterpolar(
-        r=mm_closed,
-        theta=labels_closed,
-        fill='toself',
-        fillcolor='rgba(78, 205, 196, 0.08)',
-        line=dict(color='rgba(78, 205, 196, 0.4)', width=2),
-        marker=dict(size=6, color='rgba(78, 205, 196, 0.4)'),
-        name='MM or better (mean)',
-        hovertemplate='<b>%{theta}</b><br>Score: %{r:.4f}<extra></extra>'
-    ))
+    ax.plot(angles_closed, mm_closed, 'o-', linewidth=3,
+            color='#4ECDC4', alpha=0.6, label='MM or better (mean)', markersize=8)
+    ax.fill(angles_closed, mm_closed, alpha=0.15, color='#4ECDC4')
 
     # 患者データ（黄色、強調）
-    fig.add_trace(go.Scatterpolar(
-        r=patient_closed,
-        theta=labels_closed,
-        fill='toself',
-        fillcolor='rgba(255, 193, 7, 0.3)',
-        line=dict(color='#FFC107', width=4),
-        marker=dict(size=14, color='#FFC107', line=dict(color='white', width=2)),
-        name='This patient',
-        hovertemplate='<b>%{theta}</b><br>Score: %{r:.4f}<extra></extra>'
-    ))
+    ax.plot(angles_closed, patient_closed, 'o-', linewidth=5,
+            color='#FFC107', label='This patient', markersize=16,
+            markeredgecolor='white', markeredgewidth=3)
+    ax.fill(angles_closed, patient_closed, alpha=0.3, color='#FFC107')
 
-    # データの最大値を取得（はみ出し対策）
-    max_val = max(
-        np.max(patient_closed),
-        np.max(mm_closed),
-        np.max(non_mm_closed)
-    )
-    # 円の範囲を0.15だが、データが超える場合は自動拡張
-    display_range = max(0.15, max_val * 1.1)
+    # 軸ラベル
+    ax.set_xticks(angles)
+    ax.set_xticklabels(labels, size=20, weight='bold')
 
-    # レイアウト設定（モバイル対応: チャートを大きく、余白を最小化）
-    fig.update_layout(
-        polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, display_range],
-                tickvals=[0.05, 0.10, 0.15],
-                ticktext=['0.05', '0.10', '0.15'],
-                tickfont=dict(size=20, color='gray'),
-                showline=False,
-                showgrid=True,
-                gridcolor='lightgray',
-                gridwidth=2
-            ),
-            angularaxis=dict(
-                tickfont=dict(size=22, color='black', family='Arial, sans-serif', weight='bold')
-            ),
-            bgcolor='white'
-        ),
-        showlegend=True,
-        legend=dict(
-            x=0.5,
-            y=-0.05,
-            xanchor='center',
-            yanchor='top',
-            orientation='h',
-            font=dict(size=18),
-            bgcolor='rgba(255, 255, 255, 0.95)',
-            bordercolor='black',
-            borderwidth=1
-        ),
-        height=800,
-        margin=dict(l=40, r=40, t=60, b=120),
-        paper_bgcolor='white',
-        plot_bgcolor='white'
-    )
+    # 放射軸の設定
+    ax.set_ylim(0, display_range)
+    ax.set_yticks([0.05, 0.10, 0.15])
+    ax.set_yticklabels(['0.05', '0.10', '0.15'], size=16, color='gray')
+    ax.grid(True, linewidth=1.5, color='lightgray', alpha=0.7)
+
+    # 凡例
+    ax.legend(loc='upper center', bbox_to_anchor=(0.5, -0.05),
+              ncol=3, fontsize=16, frameon=True, fancybox=True,
+              edgecolor='black', framealpha=0.95)
+
+    plt.tight_layout()
 
     return fig
 
