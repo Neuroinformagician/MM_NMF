@@ -25,33 +25,31 @@ st.set_page_config(
     layout="wide"
 )
 
-# カスタムCSS - iOS風デザイン
+# カスタムCSS - iOS風デザイン、確実にモバイル対応
 st.markdown("""
 <style>
     /* iOS風デザイン */
     @import url('https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&display=swap');
+
+    * {
+        box-sizing: border-box;
+    }
 
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Helvetica Neue", sans-serif;
         background-color: #f2f2f7;
     }
 
+    /* 横スクロールを完全に防止 */
+    html, body, .stApp, .main {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+    }
+
     /* 全体のコンテナ */
     .main .block-container {
         max-width: 800px;
-        padding-top: 1rem;
-        padding-bottom: 1rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-
-    /* 画面幅を超えないように */
-    .main {
-        overflow-x: hidden;
-    }
-
-    .stApp {
-        overflow-x: hidden;
+        padding: 1rem 0.5rem;
     }
 
     /* ヘッダー */
@@ -60,104 +58,64 @@ st.markdown("""
         color: #1c1c1e;
     }
 
-    /* 進捗インジケーター */
-    .stMarkdown {
-        margin-bottom: 0.5rem;
-    }
-
-    /* Streamlitのカラムシステムを強制的に横並びに（モバイルでも） */
-    div[data-testid="stHorizontalBlock"] {
+    /* ラジオボタングループを横並びに、iOS風ボタンスタイル */
+    div[role="radiogroup"] {
         display: flex !important;
         flex-direction: row !important;
         gap: 3px !important;
         width: 100% !important;
-        max-width: 100vw !important;
+        max-width: 100% !important;
         flex-wrap: nowrap !important;
-        overflow: visible !important;
     }
 
-    div[data-testid="column"] {
+    /* 各ラジオボタンオプション */
+    div[role="radiogroup"] > label {
         flex: 1 1 0 !important;
         min-width: 0 !important;
-        width: auto !important;
         max-width: 25% !important;
+        margin: 0 !important;
+        padding: 0 !important;
     }
 
-    /* レガシーのStreamlitバージョン対応 */
-    div.row-widget.stHorizontal,
-    div.stColumns {
-        display: flex !important;
-        flex-direction: row !important;
-        gap: 3px !important;
+    /* ラジオボタンの見た目をボタン風に */
+    div[role="radiogroup"] > label > div {
         width: 100% !important;
-        max-width: 100vw !important;
-        flex-wrap: nowrap !important;
-        overflow: visible !important;
+        padding: 10px 4px !important;
+        text-align: center !important;
+        border: 2px solid #e5e5ea !important;
+        border-radius: 8px !important;
+        background-color: white !important;
+        color: #1c1c1e !important;
+        font-weight: 600 !important;
+        font-size: 1.1em !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        height: 50px !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
     }
 
-    div.row-widget.stHorizontal > div,
-    div.stColumns > div {
-        flex: 1 1 0 !important;
-        min-width: 0 !important;
-        max-width: 25% !important;
+    /* 選択されたラジオボタン（青色） */
+    div[role="radiogroup"] > label > div[data-checked="true"] {
+        background-color: #007aff !important;
+        border-color: #007aff !important;
+        color: white !important;
     }
 
-    /* スコアボタングループのスタイル */
-    div.stButton {
-        margin: 0;
-        padding: 0;
-        width: 100%;
+    /* ラジオボタンの丸アイコンを非表示 */
+    div[role="radiogroup"] input[type="radio"] {
+        display: none !important;
     }
 
-    div.stButton > button {
-        width: 100%;
-        max-width: 100%;
-        height: 60px;
-        font-size: 1.1em;
-        font-weight: 600;
-        border-radius: 8px;
-        border: 2px solid #e5e5ea;
-        background-color: white;
-        color: #1c1c1e;
-        transition: all 0.2s ease;
-        margin: 0;
-        padding: 8px 4px;
-        box-sizing: border-box;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+    /* ホバーエフェクト */
+    div[role="radiogroup"] > label > div:hover {
+        background-color: #f2f2f7 !important;
+        border-color: #007aff !important;
     }
 
-    div.stButton > button:hover {
-        background-color: #f2f2f7;
-        border-color: #007aff;
-    }
-
-    /* 選択されたボタン（data-baseweb属性を使って判定） */
-    div.stButton > button[kind="secondary"] {
-        background-color: white;
-        border-color: #e5e5ea;
-        color: #1c1c1e;
-    }
-
-    /* プライマリボタン（選択済み） */
-    div.stButton > button[kind="primary"] {
-        background-color: #007aff;
-        border-color: #007aff;
-        color: white;
-        font-weight: 700;
-    }
-
-    /* MGC用の緑色 */
-    .mgc-selected button[kind="primary"] {
-        background-color: #34c759 !important;
-        border-color: #34c759 !important;
-    }
-
-    /* MGQOL用の紫色 */
-    .mgqol-selected button[kind="primary"] {
-        background-color: #af52de !important;
-        border-color: #af52de !important;
+    div[role="radiogroup"] > label > div[data-checked="true"]:hover {
+        background-color: #0062cc !important;
     }
 
     /* 項目ラベル */
@@ -186,9 +144,15 @@ st.markdown("""
     }
 
     /* ナビゲーションボタン */
-    div.stButton > button[data-testid="baseButton-primary"] {
+    div.stButton > button {
         min-height: 60px;
-        font-size: 1.3em;
+        font-size: 1.2em;
+        font-weight: 600;
+        border-radius: 10px;
+    }
+
+    /* プライマリボタン */
+    div.stButton > button[kind="primary"] {
         background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
         border: none;
     }
@@ -196,67 +160,75 @@ st.markdown("""
     /* モバイル対応 */
     @media screen and (max-width: 768px) {
         .main .block-container {
-            padding: 0.5rem 0.3rem;
-            max-width: 100vw;
+            padding: 0.5rem 0.25rem;
         }
 
-        div.stButton > button {
-            height: 50px;
-            font-size: 0.95em;
-            padding: 4px 2px;
-            border-radius: 6px;
+        div[role="radiogroup"] > label > div {
+            font-size: 1em !important;
+            padding: 8px 2px !important;
+            height: 48px !important;
+            border-radius: 6px !important;
         }
 
-        div[data-testid="stHorizontalBlock"],
-        div.row-widget.stHorizontal,
-        div.stColumns {
+        div[role="radiogroup"] {
             gap: 2px !important;
         }
 
         .item-label {
             font-size: 1em;
             padding: 8px;
-            margin-top: 10px;
-            margin-bottom: 5px;
+            margin-top: 12px;
+            margin-bottom: 6px;
+        }
+
+        .total-score {
+            font-size: 1.3em;
+            padding: 15px;
+        }
+
+        div.stButton > button {
+            min-height: 55px;
+            font-size: 1.1em;
         }
     }
 
     /* 超小型デバイス対応 */
     @media screen and (max-width: 400px) {
-        div.stButton > button {
-            height: 48px;
-            font-size: 0.9em;
-            padding: 4px 1px;
-            border-width: 1px;
-            border-radius: 5px;
+        .main .block-container {
+            padding: 0.5rem 0.2rem;
         }
 
-        div[data-testid="stHorizontalBlock"],
-        div.row-widget.stHorizontal,
-        div.stColumns {
-            gap: 2px !important;
+        div[role="radiogroup"] > label > div {
+            font-size: 0.95em !important;
+            padding: 6px 1px !important;
+            height: 45px !important;
+            border-width: 1px !important;
+            border-radius: 5px !important;
+        }
+
+        div[role="radiogroup"] {
+            gap: 1px !important;
         }
 
         .item-label {
             font-size: 0.95em;
             padding: 6px;
+            margin-top: 10px;
+            margin-bottom: 5px;
+        }
+
+        .total-score {
+            font-size: 1.2em;
+            padding: 12px;
         }
     }
 
     /* 極小デバイス対応 */
     @media screen and (max-width: 350px) {
-        div.stButton > button {
-            height: 45px;
-            font-size: 0.85em;
-            padding: 2px 0px;
-            border-width: 1px;
-            border-radius: 4px;
-        }
-
-        div[data-testid="stHorizontalBlock"],
-        div.row-widget.stHorizontal,
-        div.stColumns {
-            gap: 1px !important;
+        div[role="radiogroup"] > label > div {
+            font-size: 0.9em !important;
+            padding: 4px 0px !important;
+            height: 42px !important;
         }
 
         .item-label {
@@ -284,10 +256,6 @@ if 'predictor' not in st.session_state:
 # ヘルパー関数
 # ============================================================================
 
-def set_score(key, value):
-    """スコアを設定"""
-    st.session_state.scores[key] = value
-
 def get_score(key):
     """スコアを取得（デフォルト0）"""
     return st.session_state.scores.get(key, 0)
@@ -296,7 +264,7 @@ def reset_all_scores():
     """全スコアをリセット"""
     st.session_state.scores = {}
     st.session_state.prediction_results = None
-    st.session_state.current_scale = 0  # MG-ADLに戻る
+    st.session_state.current_scale = 0
     st.rerun()
 
 def sync_adl_to_mgc():
@@ -318,7 +286,6 @@ def calculate_total(items, prefix):
     for item in items:
         key = f"{prefix}_{item['key']}"
         if prefix == "mgc":
-            # MGCは実際の点数配列から取得
             index = get_score(key)
             total += item['values'][index]
         else:
@@ -330,7 +297,7 @@ def calculate_total(items, prefix):
 # ============================================================================
 
 if 'current_scale' not in st.session_state:
-    st.session_state.current_scale = 0  # 0: ADL, 1: MGC, 2: MGQOL, 3: Results
+    st.session_state.current_scale = 0
 
 def next_scale():
     """次のスケールに進む"""
@@ -344,16 +311,11 @@ def prev_scale():
         st.session_state.current_scale -= 1
         st.rerun()
 
-def go_to_scale(scale_index):
-    """指定のスケールに移動"""
-    st.session_state.current_scale = scale_index
-    st.rerun()
-
 # ============================================================================
 # メインUI
 # ============================================================================
 
-st.title("MG予測システム")
+st.title("🏥 MG予測システム")
 
 # 進捗インジケーター
 progress_labels = ["MG-ADL", "MG Composite", "MGQOL-15r", "予測結果"]
@@ -375,36 +337,37 @@ st.markdown("---")
 
 if st.session_state.current_scale == 0:
     st.header("MG-ADL (0-24点)")
-    st.caption("各項目について、該当するスコアをタップしてください")
+    st.caption("各項目について、該当するスコアを選択してください")
 
     for item in MGADL_ITEMS:
         key = f"adl_{item['key']}"
         current_score = get_score(key)
-        max_val = len(item['options']) - 1
 
-        # 自動反映される項目には印をつける
         marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
         st.markdown(f'<div class="item-label">{item["name"]}{marker}</div>', unsafe_allow_html=True)
 
-        # スコアボタンを横並びで表示
-        cols = st.columns(max_val + 1)
-        for i in range(max_val + 1):
-            with cols[i]:
-                button_type = "primary" if current_score == i else "secondary"
-                if st.button(f"{i}", key=f"btn_{key}_{i}", type=button_type, use_container_width=True):
-                    set_score(key, i)
-                    # 自動的にMGCに反映
-                    sync_adl_to_mgc()
-                    st.rerun()
+        # st.radioを使って確実に横並び
+        selected = st.radio(
+            label=item['name'],
+            options=list(range(len(item['options']))),
+            index=current_score,
+            horizontal=True,
+            key=key,
+            label_visibility="collapsed"
+        )
 
-    # 合計点表示
+        # スコアを保存
+        st.session_state.scores[key] = selected
+
+        # 自動的にMGCに反映
+        if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
+            sync_adl_to_mgc()
+
     total = calculate_total(MGADL_ITEMS, 'adl')
     st.markdown(f'<div class="total-score">合計: {total}/24点</div>', unsafe_allow_html=True)
     st.caption("⚡印の項目はMG Compositeに自動反映されます")
 
     st.markdown("---")
-
-    # ナビゲーションボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col3:
         if st.button("MGCへ →", type="primary", use_container_width=True):
@@ -416,34 +379,33 @@ if st.session_state.current_scale == 0:
 
 elif st.session_state.current_scale == 1:
     st.header("MG Composite (0-50点)")
-    st.caption("各項目について、該当するスコアをタップしてください")
+    st.caption("各項目について、該当するスコアを選択してください")
 
     for item in MGC_ITEMS:
         key = f"mgc_{item['key']}"
         current_score = get_score(key)
-        max_val = len(item['values']) - 1
 
         marker = " ⚡" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
         st.markdown(f'<div class="item-label">{item["name"]}{marker}<br><small style="color: #8e8e93;">{item.get("description", "")}</small></div>', unsafe_allow_html=True)
 
-        # スコアボタンを横並びで表示（実際の点数を表示）
-        cols = st.columns(max_val + 1)
-        for i in range(max_val + 1):
-            with cols[i]:
-                actual_score = item['values'][i]
-                button_type = "primary" if current_score == i else "secondary"
-                if st.button(f"{actual_score}", key=f"btn_{key}_{i}", type=button_type, use_container_width=True):
-                    set_score(key, i)
-                    st.rerun()
+        # st.radioで横並び、実際の点数を表示
+        selected = st.radio(
+            label=item['name'],
+            options=list(range(len(item['values']))),
+            format_func=lambda x: str(item['values'][x]),
+            index=current_score,
+            horizontal=True,
+            key=key,
+            label_visibility="collapsed"
+        )
 
-    # 合計点表示
+        st.session_state.scores[key] = selected
+
     total = calculate_total(MGC_ITEMS, 'mgc')
     st.markdown(f'<div class="total-score" style="color: #34c759;">合計: {total}/50点</div>', unsafe_allow_html=True)
     st.caption("⚡印の項目はMG-ADLから自動反映されます")
 
     st.markdown("---")
-
-    # ナビゲーションボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
         if st.button("← ADLへ戻る", use_container_width=True):
@@ -458,7 +420,7 @@ elif st.session_state.current_scale == 1:
 
 elif st.session_state.current_scale == 2:
     st.header("MGQOL-15r (0-30点)")
-    st.caption("各質問について、該当するスコアをタップしてください")
+    st.caption("各質問について、該当するスコアを選択してください")
 
     for item in MGQOL_ITEMS:
         key = f"mgqol_{item['key']}"
@@ -466,23 +428,22 @@ elif st.session_state.current_scale == 2:
 
         st.markdown(f'<div class="item-label">{item["name"]}</div>', unsafe_allow_html=True)
 
-        # スコアボタンを横並びで表示（0-2点）
-        cols = st.columns(3)
-        score_labels = ["0: 全くそうは思わない", "1: 少しそう思う", "2: 強くそう思う"]
-        for i in range(3):
-            with cols[i]:
-                button_type = "primary" if current_score == i else "secondary"
-                if st.button(f"{i}", key=f"btn_{key}_{i}", type=button_type, use_container_width=True):
-                    set_score(key, i)
-                    st.rerun()
+        # st.radioで横並び（0-2点）
+        selected = st.radio(
+            label=item['name'],
+            options=[0, 1, 2],
+            index=current_score,
+            horizontal=True,
+            key=key,
+            label_visibility="collapsed"
+        )
 
-    # 合計点表示
+        st.session_state.scores[key] = selected
+
     total = calculate_total(MGQOL_ITEMS, 'mgqol')
     st.markdown(f'<div class="total-score" style="color: #af52de;">合計: {total}/30点</div>', unsafe_allow_html=True)
 
     st.markdown("---")
-
-    # ナビゲーションボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
         if st.button("← MGCへ戻る", use_container_width=True):
@@ -498,7 +459,6 @@ elif st.session_state.current_scale == 2:
 elif st.session_state.current_scale == 3:
     st.header("予測結果")
 
-    # 予測を自動実行（まだ実行されていない場合）
     if st.session_state.prediction_results is None:
         with st.spinner("予測中..."):
             try:
@@ -509,20 +469,11 @@ elif st.session_state.current_scale == 3:
                     st.session_state.predictor.load_resources()
 
                 predictor = st.session_state.predictor
-
-                # UIスコアをDataFrameに変換
                 patient_df = predictor.convert_ui_scores_to_dataframe(st.session_state.scores)
-
-                # モジュールスコアに変換
                 module_scores = predictor.transform_to_modules(patient_df)
-
-                # 予測実行
                 results = predictor.predict(module_scores)
-
-                # MM/non-MM比較データ取得
                 comparison = predictor.get_mm_comparison_data()
 
-                # 結果をセッションに保存
                 st.session_state.prediction_results = {
                     **results,
                     "comparison": comparison
@@ -535,23 +486,16 @@ elif st.session_state.current_scale == 3:
                 st.error(f"❌ 予測エラー: {e}")
                 st.exception(e)
 
-    # 結果表示
     if st.session_state.prediction_results is not None:
         results = st.session_state.prediction_results
 
         st.markdown("---")
 
-        # 予測結果表示（目立つように）
         ensemble_prob = results['ensemble']
         classification = results['classification']
         total_votes = results['total_mm_votes']
-        total_models = results['total_models']
 
-        # 確率に応じて色を変更
-        if classification == "MM or better":
-            color = "#4CAF50"  # 緑
-        else:
-            color = "#F44336"  # 赤
+        color = "#4CAF50" if classification == "MM or better" else "#F44336"
 
         st.markdown(f"""
         <div style='background-color: {color}; padding: 20px; border-radius: 10px; text-align: center;'>
@@ -562,7 +506,6 @@ elif st.session_state.current_scale == 3:
         </div>
         """, unsafe_allow_html=True)
 
-        # 入力スコア合計の表示
         st.markdown("### 入力スコア")
         score_cols = st.columns(3)
         with score_cols[0]:
@@ -575,10 +518,8 @@ elif st.session_state.current_scale == 3:
             mgqol_total = calculate_total(MGQOL_ITEMS, 'mgqol')
             st.metric("MGQOL-15r", f"{mgqol_total}/30")
 
-        # 各モデルの予測詳細
         st.markdown("### 各モデルの予測")
 
-        # 詳細情報（折りたたみ）
         with st.expander("📊 詳細"):
             st.write("**各モデルの詳細データ:**")
             for model_name, vote_info in results['model_votes'].items():
@@ -595,16 +536,10 @@ elif st.session_state.current_scale == 3:
         for i, (model_name, vote_info) in enumerate(results['model_votes'].items()):
             with cols[i]:
                 prob = vote_info['probability']
-                cutoff = vote_info['cutoff']
                 pred = vote_info['prediction']
 
-                # カラー: MM or better なら緑、そうでなければ赤
-                if pred == "MM or better":
-                    badge_color = "#4CAF50"
-                    icon = "✓"
-                else:
-                    badge_color = "#F44336"
-                    icon = "✗"
+                badge_color = "#4CAF50" if pred == "MM or better" else "#F44336"
+                icon = "✓" if pred == "MM or better" else "✗"
 
                 st.markdown(f"""
                 <div style='padding: 15px; border: 2px solid {badge_color}; border-radius: 10px; text-align: center;'>
@@ -614,7 +549,6 @@ elif st.session_state.current_scale == 3:
                 </div>
                 """, unsafe_allow_html=True)
 
-        # モジュールスコア表示
         st.markdown("### モジュールスコア")
 
         module_df = results['module_scores'].copy()
@@ -625,7 +559,6 @@ elif st.session_state.current_scale == 3:
             with cols[i]:
                 st.metric(col_name, f"{value:.4f}")
 
-        # レーダーチャート
         st.markdown("### 比較チャート")
 
         comparison = results['comparison']
@@ -639,13 +572,11 @@ elif st.session_state.current_scale == 3:
             ensemble_prob=ensemble_prob
         )
 
-        # matplotlib チャートを表示
         st.pyplot(fig, use_container_width=True)
 
     else:
         st.info("予測を実行中です...")
 
-    # ナビゲーションボタン
     st.markdown("---")
     col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
@@ -659,10 +590,8 @@ elif st.session_state.current_scale == 3:
 st.markdown("---")
 col1, col2, col3 = st.columns([1, 1, 1])
 with col2:
-    reset_btn = st.button("🔄 全データリセット", use_container_width=True)
-
-if reset_btn:
-    reset_all_scores()
+    if st.button("🔄 全データリセット", use_container_width=True):
+        reset_all_scores()
 
 # ============================================================================
 # フッター
@@ -671,6 +600,6 @@ if reset_btn:
 st.markdown("---")
 st.markdown("""
 <div style='text-align: center; color: gray;'>
-    <small>MG予測システム v1.0 | 重症筋無力症 MM予測</small>
+    <small>MG予測システム v2.0 | 重症筋無力症 MM予測</small>
 </div>
 """, unsafe_allow_html=True)
