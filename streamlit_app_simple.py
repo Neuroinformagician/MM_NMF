@@ -198,32 +198,89 @@ st.markdown("""
         border: 1px solid #e0e0e0;
     }
 
-    /* 横スクロール防止 */
-    html, body, .stApp, .main {
-        overflow-x: hidden !important;
+    /* 横スクロール防止 - すべての要素に適用 */
+    * {
         max-width: 100vw !important;
     }
 
-    /* 強制的に横並びレイアウト - 画面幅に収める */
+    html, body {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        width: 100vw !important;
+        margin: 0 !important;
+        padding: 0 !important;
+    }
+
+    /* Streamlitのすべてのコンテナを制限 */
+    .stApp,
+    .main,
+    section.main,
+    div.block-container,
+    div.element-container,
+    div.stMarkdown,
+    div.row-widget {
+        overflow-x: hidden !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+    }
+
+    /* ビューポート幅を使用して確実に画面内に収める */
+    section.main > div.block-container {
+        width: 100vw !important;
+        max-width: 100vw !important;
+        padding-left: 0.5rem !important;
+        padding-right: 0.5rem !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
+    }
+
+    /* 強制的に横並びレイアウト - ビューポート幅基準 */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 2px !important;
-        width: calc(100% + 0.5rem) !important; /* コンテナのパディング分を補正 */
-        margin-left: -0.25rem !important;
-        margin-right: -0.25rem !important;
+        gap: 0 !important;
+        width: calc(100vw - 16px) !important; /* ビューポート幅からパディング分を引く */
+        max-width: calc(100vw - 16px) !important;
+        margin: 0 !important;
         padding: 0 !important;
         box-sizing: border-box !important;
+        position: relative !important;
+        left: 0 !important;
+        right: 0 !important;
     }
 
-    /* カラムを均等に分割、パディングを最小化 */
+    /* すべてのカラムに共通の設定 */
     div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
         flex: 1 1 0 !important;
         min-width: 0 !important;
-        padding: 0 2px !important;
+        padding: 0 1px !important;
         margin: 0 !important;
         box-sizing: border-box !important;
+    }
+
+    /* 4カラムレイアウト - ビューポート幅を4分割 */
+    div[data-testid="stHorizontalBlock"]:has(> div:nth-child(4)) > div[data-testid="column"] {
+        width: calc((100vw - 16px) / 4) !important;
+        max-width: calc((100vw - 16px) / 4) !important;
+        min-width: calc((100vw - 16px) / 4) !important;
+        flex: none !important;
+    }
+
+    /* 3カラムレイアウト - ビューポート幅を3分割 */
+    div[data-testid="stHorizontalBlock"]:has(> div:nth-child(3)):not(:has(> div:nth-child(4))) > div[data-testid="column"] {
+        width: calc((100vw - 16px) / 3) !important;
+        max-width: calc((100vw - 16px) / 3) !important;
+        min-width: calc((100vw - 16px) / 3) !important;
+        flex: none !important;
+    }
+
+    /* 2カラムレイアウト - ビューポート幅を2分割 */
+    div[data-testid="stHorizontalBlock"]:has(> div:nth-child(2)):not(:has(> div:nth-child(3))) > div[data-testid="column"] {
+        width: calc((100vw - 16px) / 2) !important;
+        max-width: calc((100vw - 16px) / 2) !important;
+        min-width: calc((100vw - 16px) / 2) !important;
+        flex: none !important;
     }
 
     /* ボタンコンテナの調整 */
@@ -236,67 +293,73 @@ st.markdown("""
     /* スマホでのボタン調整 */
     @media screen and (max-width: 640px) {
         /* コンテナの幅を画面幅いっぱいに */
-        .main .block-container {
-            padding: 0.25rem !important;
+        section.main > div.block-container {
+            padding-left: 8px !important;
+            padding-right: 8px !important;
+            width: 100vw !important;
         }
 
-        /* 横並びレイアウトを画面幅に合わせる */
+        /* 横並びレイアウトを画面幅100%に */
         div[data-testid="stHorizontalBlock"] {
-            width: calc(100% + 0.5rem) !important;
-            margin-left: -0.25rem !important;
-            margin-right: -0.25rem !important;
-            gap: 1px !important;
+            width: calc(100vw - 16px) !important;
+            max-width: calc(100vw - 16px) !important;
+        }
+
+        /* 4カラムレイアウト - モバイル */
+        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(4)) > div[data-testid="column"] {
+            width: calc((100vw - 16px) / 4) !important;
+            max-width: calc((100vw - 16px) / 4) !important;
+            min-width: calc((100vw - 16px) / 4) !important;
+            padding: 0 0.5px !important;
+        }
+
+        /* 3カラムレイアウト - モバイル */
+        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(3)):not(:has(> div:nth-child(4))) > div[data-testid="column"] {
+            width: calc((100vw - 16px) / 3) !important;
+            max-width: calc((100vw - 16px) / 3) !important;
+            min-width: calc((100vw - 16px) / 3) !important;
+            padding: 0 0.5px !important;
         }
 
         /* ボタンのサイズとフォント調整 */
         div.stButton > button {
-            height: 46px !important;
-            font-size: 1.15rem !important;
+            height: 48px !important;
+            font-size: 1.2rem !important;
             font-weight: 600 !important;
-            padding: 0 3px !important;
+            padding: 0 2px !important;
             min-width: 0 !important;
             width: 100% !important;
-            border: 1px solid #ddd !important; /* ボーダーを細く */
-        }
-
-        /* カラムをさらにタイトに */
-        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            padding: 0 1px !important;
+            border: 1px solid #ddd !important;
         }
     }
 
     /* 極小画面での調整 */
-    @media screen and (max-width: 380px) {
+    @media screen and (max-width: 400px) {
+        /* パディングをさらに減らす */
+        section.main > div.block-container {
+            padding-left: 4px !important;
+            padding-right: 4px !important;
+        }
+
+        /* 横並びレイアウト調整 */
+        div[data-testid="stHorizontalBlock"] {
+            width: calc(100vw - 8px) !important;
+            max-width: calc(100vw - 8px) !important;
+        }
+
+        /* 4カラムレイアウト - 極小画面 */
+        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(4)) > div[data-testid="column"] {
+            width: calc((100vw - 8px) / 4) !important;
+            max-width: calc((100vw - 8px) / 4) !important;
+            min-width: calc((100vw - 8px) / 4) !important;
+            padding: 0 !important;
+        }
+
+        /* ボタン調整 */
         div.stButton > button {
             height: 44px !important;
             font-size: 1.05rem !important;
-            padding: 0 2px !important;
-        }
-
-        /* さらにギャップを減らす */
-        div[data-testid="stHorizontalBlock"] {
-            gap: 0.5px !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            padding: 0 0.5px !important;
-        }
-    }
-
-    /* iPhone SE等の小画面対応 */
-    @media screen and (max-width: 320px) {
-        div.stButton > button {
-            height: 40px !important;
-            font-size: 0.95rem !important;
             padding: 0 1px !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] {
-            gap: 0 !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            padding: 0 !important;
         }
     }
 </style>
@@ -323,24 +386,83 @@ st.markdown("""
             }
         }
 
+        // JavaScriptで強制的にレイアウトを修正
+        function fixButtonLayout() {
+            const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
+            const blocks = document.querySelectorAll('div[data-testid="stHorizontalBlock"]');
+
+            blocks.forEach(block => {
+                const columns = block.querySelectorAll('div[data-testid="column"]');
+                const columnCount = columns.length;
+
+                if (columnCount > 0) {
+                    // ブロック全体の幅を画面幅に設定
+                    block.style.width = `${vw - 16}px`;
+                    block.style.maxWidth = `${vw - 16}px`;
+                    block.style.display = 'flex';
+                    block.style.flexDirection = 'row';
+                    block.style.gap = '0';
+                    block.style.padding = '0';
+                    block.style.margin = '0';
+
+                    // 各カラムの幅を均等に設定
+                    columns.forEach(col => {
+                        const width = (vw - 16) / columnCount;
+                        col.style.width = `${width}px`;
+                        col.style.maxWidth = `${width}px`;
+                        col.style.minWidth = `${width}px`;
+                        col.style.flex = 'none';
+                        col.style.padding = '0 1px';
+                        col.style.margin = '0';
+
+                        // ボタンも調整
+                        const button = col.querySelector('button');
+                        if (button) {
+                            button.style.width = '100%';
+                            button.style.padding = '0 2px';
+                        }
+                    });
+                }
+            });
+        }
+
         // 即座に実行
         scrollToTop();
+        fixButtonLayout();
 
         // DOMContentLoaded時にも実行
         if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', scrollToTop);
+            document.addEventListener('DOMContentLoaded', () => {
+                scrollToTop();
+                fixButtonLayout();
+            });
         } else {
             scrollToTop();
+            fixButtonLayout();
         }
 
         // ページロード完了時にも実行
-        window.addEventListener('load', scrollToTop);
+        window.addEventListener('load', () => {
+            scrollToTop();
+            fixButtonLayout();
+        });
 
         // 少し遅延して再実行（Streamlitの動的レンダリングに対応）
-        setTimeout(scrollToTop, 10);
-        setTimeout(scrollToTop, 50);
-        setTimeout(scrollToTop, 100);
-        setTimeout(scrollToTop, 200);
+        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 10);
+        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 50);
+        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 100);
+        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 200);
+        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 500);
+
+        // MutationObserverで変更を監視
+        const observer = new MutationObserver(() => {
+            fixButtonLayout();
+        });
+
+        observer.observe(document.body, {
+            childList: true,
+            subtree: true
+        });
     })();
 </script>
 """, unsafe_allow_html=True)
