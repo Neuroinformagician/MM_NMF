@@ -111,38 +111,61 @@ st.markdown("""
     });
 
     // Streamlit rerun時のスクロール制御
-    const observer = new MutationObserver(function() {
-        // scroll_actionがあるか確認（Streamlitのセッションステートから）
-        const stateElements = document.querySelectorAll('[data-testid]');
+    let hasScrolled = false;
+
+    const checkAndScroll = function() {
+        if (hasScrolled) return;
+
+        // マーカーを探す
         let scrollAction = null;
+        const allElements = document.body.getElementsByTagName('*');
 
-        stateElements.forEach(el => {
-            if (el.textContent.includes('SCROLL_TO_TOP')) {
+        for (let el of allElements) {
+            const text = el.textContent || '';
+            if (text === 'SCROLL_TO_TOP') {
                 scrollAction = 'top';
-            } else if (el.textContent.includes('SCROLL_TO_RESULTS')) {
+                hasScrolled = true;
+                break;
+            } else if (text === 'SCROLL_TO_RESULTS') {
                 scrollAction = 'results';
+                hasScrolled = true;
+                break;
             }
-        });
+        }
 
-        setTimeout(function() {
-            if (scrollAction === 'top') {
+        if (scrollAction === 'top') {
+            setTimeout(() => {
                 window.scrollTo({ top: 0, behavior: 'smooth' });
                 sessionStorage.removeItem('scrollPosition');
-            } else if (scrollAction === 'results') {
-                // 予測結果まで自動スクロール（IDを探す）
+            }, 100);
+        } else if (scrollAction === 'results') {
+            setTimeout(() => {
                 const resultsElement = document.getElementById('prediction-results');
                 if (resultsElement) {
                     resultsElement.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                } else {
+                    // フォールバック: ページの下部にスクロール
+                    window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
                 }
                 sessionStorage.removeItem('scrollPosition');
-            } else {
-                // 通常はスクロール位置を保持（スコアボタンクリック時）
-                const scrollPosition = sessionStorage.getItem('scrollPosition');
-                if (scrollPosition !== null) {
+            }, 300);
+        } else if (!scrollAction) {
+            // 通常はスクロール位置を保持
+            const scrollPosition = sessionStorage.getItem('scrollPosition');
+            if (scrollPosition !== null) {
+                setTimeout(() => {
                     window.scrollTo(0, parseInt(scrollPosition));
-                }
+                }, 100);
             }
-        }, 150);
+        }
+    };
+
+    // ページ読み込み時と変更時に実行
+    window.addEventListener('load', checkAndScroll);
+
+    const observer = new MutationObserver(function() {
+        hasScrolled = false;
+        checkAndScroll();
     });
 
     observer.observe(document.body, { childList: true, subtree: true });
