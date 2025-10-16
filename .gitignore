@@ -2,8 +2,10 @@
 *.tmp           # 一時ファイル
 *.DS_Store      # macOSシステムファイル
 
-data/           # data フォルダ全体
 cache/          # キャッシュフォルダ
 
 *.tiff
-fig/
+fig/*.png
+fig/*.tiff
+
+# Streamlit用に data/ と out/ はコミットする
