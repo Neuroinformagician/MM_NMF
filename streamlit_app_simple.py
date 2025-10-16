@@ -254,6 +254,49 @@ st.markdown("""
         }
     }
 </style>
+
+<script>
+    // ページロード時に必ず画面上部にスクロール
+    (function() {
+        // 複数の方法でスクロールを試みる
+        function scrollToTop() {
+            window.scrollTo(0, 0);
+            document.body.scrollTop = 0;
+            document.documentElement.scrollTop = 0;
+
+            // Streamlitのメインコンテナもスクロール
+            const mainContainer = document.querySelector('.main');
+            if (mainContainer) {
+                mainContainer.scrollTop = 0;
+            }
+
+            // stAppコンテナもスクロール
+            const stApp = document.querySelector('.stApp');
+            if (stApp) {
+                stApp.scrollTop = 0;
+            }
+        }
+
+        // 即座に実行
+        scrollToTop();
+
+        // DOMContentLoaded時にも実行
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', scrollToTop);
+        } else {
+            scrollToTop();
+        }
+
+        // ページロード完了時にも実行
+        window.addEventListener('load', scrollToTop);
+
+        // 少し遅延して再実行（Streamlitの動的レンダリングに対応）
+        setTimeout(scrollToTop, 10);
+        setTimeout(scrollToTop, 50);
+        setTimeout(scrollToTop, 100);
+        setTimeout(scrollToTop, 200);
+    })();
+</script>
 """, unsafe_allow_html=True)
 
 # ============================================================================
@@ -352,6 +395,13 @@ st.markdown("---")
 # ============================================================================
 
 if st.session_state.current_scale == 0:
+    # スクロールトップ用のJavaScript
+    st.markdown("""<script>
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    </script>""", unsafe_allow_html=True)
+
     st.header("MG-ADL (0-24点)")
 
     for item in MGADL_ITEMS:
@@ -388,6 +438,13 @@ if st.session_state.current_scale == 0:
 # ============================================================================
 
 elif st.session_state.current_scale == 1:
+    # スクロールトップ用のJavaScript
+    st.markdown("""<script>
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    </script>""", unsafe_allow_html=True)
+
     st.header("MG Composite (0-50点)")
 
     for item in MGC_ITEMS:
@@ -427,6 +484,13 @@ elif st.session_state.current_scale == 1:
 # ============================================================================
 
 elif st.session_state.current_scale == 2:
+    # スクロールトップ用のJavaScript
+    st.markdown("""<script>
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    </script>""", unsafe_allow_html=True)
+
     st.header("MGQOL-15r (0-30点)")
 
     for item in MGQOL_ITEMS:
@@ -463,6 +527,13 @@ elif st.session_state.current_scale == 2:
 # ============================================================================
 
 elif st.session_state.current_scale == 3:
+    # スクロールトップ用のJavaScript
+    st.markdown("""<script>
+        window.scrollTo(0, 0);
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    </script>""", unsafe_allow_html=True)
+
     st.header("予測結果")
 
     if st.session_state.prediction_results is None:
