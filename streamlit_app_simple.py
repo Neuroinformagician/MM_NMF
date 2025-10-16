@@ -7,6 +7,7 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 from pathlib import Path
+import streamlit.components.v1 as components
 
 from streamlit_config import (
     MGADL_ITEMS, MGC_ITEMS, MGQOL_ITEMS,
@@ -14,6 +15,7 @@ from streamlit_config import (
 )
 from streamlit_predictor import MGPredictor
 from streamlit_visualizer import create_radar_chart
+from streamlit_mg_component import create_mg_scale_component
 
 # ============================================================================
 # ページ設定
@@ -317,50 +319,27 @@ st.markdown("---")
 # ============================================================================
 
 if st.session_state.current_scale == 0:
-    # スクロールトップ用のJavaScript
-    st.markdown("""<script>
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
-    </script>""", unsafe_allow_html=True)
-
     st.header("MG-ADL (0-24点)")
 
-    # タップ入力セクション風のレイアウト
-    for idx, item in enumerate(MGADL_ITEMS):
-        key = f"adl_{item['key']}"
-        current_score = get_score(key)
+    # mg-scale-iOS.htmlと完全に同じUIのコンポーネントを表示
+    html_content = create_mg_scale_component(
+        scale_type="adl",
+        items=[{"name": item["name"], "key": item["key"]} for item in MGADL_ITEMS]
+    )
 
-        # 各項目をコンテナで囲む
-        with st.container():
-            # 項目名とスコア表示を横に並べる
-            col1, col2 = st.columns([3, 1])
+    # カスタムコンポーネントを表示（高さを調整）
+    result = components.html(html_content, height=600, scrolling=False)
 
-            with col1:
-                marker = " (→MGC自動反映)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-                st.markdown(f'<div class="item-name">{item["name"]}{marker}</div>', unsafe_allow_html=True)
-
-            with col2:
-                st.markdown(f'<div class="score-display">{current_score}</div>', unsafe_allow_html=True)
-
-            # スコアボタンを横並びで配置
-            cols = st.columns(4)
-            for i in range(4):
-                with cols[i]:
-                    btn_type = "primary" if current_score == i else "secondary"
-                    if st.button(str(i), key=f"{key}_{i}", type=btn_type, use_container_width=True):
-                        set_score(key, i)
-                        if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
-                            sync_adl_to_mgc()
-                        st.rerun()
-
-            # 項目間にスペースを追加
-            if idx < len(MGADL_ITEMS) - 1:
-                st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
-
-    # 合計点
-    total = calculate_total(MGADL_ITEMS, 'adl')
-    st.markdown(f'<div class="total-display">合計: {total}/24点</div>', unsafe_allow_html=True)
+    # 結果を受け取ってセッション状態に保存
+    if result:
+        for i, item in enumerate(MGADL_ITEMS):
+            key = f"adl_{item['key']}"
+            if 'scores' in result:
+                st.session_state.scores[key] = result['scores'][i]
+                # ADLからMGCへの自動同期
+                if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
+                    mgc_key = f"mgc_{item['key']}"
+                    st.session_state.scores[mgc_key] = result['scores'][i]
 
     st.markdown("---")
     col1, col2 = st.columns(2)
@@ -373,51 +352,28 @@ if st.session_state.current_scale == 0:
 # ============================================================================
 
 elif st.session_state.current_scale == 1:
-    # スクロールトップ用のJavaScript
-    st.markdown("""<script>
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
-    </script>""", unsafe_allow_html=True)
-
     st.header("MG Composite (0-50点)")
 
-    # タップ入力セクション風のレイアウト
-    for idx, item in enumerate(MGC_ITEMS):
-        key = f"mgc_{item['key']}"
-        current_score = get_score(key)
-        current_value = item['values'][current_score]
+    # mg-scale-iOS.htmlと完全に同じUIのコンポーネントを表示
+    html_content = create_mg_scale_component(
+        scale_type="mgc",
+        items=[{
+            "name": item["name"],
+            "key": item["key"],
+            "values": item["values"],
+            "description": item.get("description", "")
+        } for item in MGC_ITEMS]
+    )
 
-        # 各項目をコンテナで囲む
-        with st.container():
-            # 項目名とスコア表示を横に並べる
-            col1, col2 = st.columns([3, 1])
+    # カスタムコンポーネントを表示（高さを調整）
+    result = components.html(html_content, height=700, scrolling=False)
 
-            with col1:
-                marker = " (ADLから自動)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-                desc = f" - {item['description']}" if item.get('description') else ""
-                st.markdown(f'<div class="item-name">{item["name"]}{marker}{desc}</div>', unsafe_allow_html=True)
-
-            with col2:
-                st.markdown(f'<div class="score-display">{current_value}</div>', unsafe_allow_html=True)
-
-            # スコアボタン（実際の値）
-            values = item['values']
-            cols = st.columns(len(values))
-            for i, val in enumerate(values):
-                with cols[i]:
-                    btn_type = "primary" if current_score == i else "secondary"
-                    if st.button(str(val), key=f"{key}_{i}", type=btn_type, use_container_width=True):
-                        set_score(key, i)
-                        st.rerun()
-
-            # 項目間にスペースを追加
-            if idx < len(MGC_ITEMS) - 1:
-                st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
-
-    # 合計点
-    total = calculate_total(MGC_ITEMS, 'mgc')
-    st.markdown(f'<div class="total-display mgc">合計: {total}/50点</div>', unsafe_allow_html=True)
+    # 結果を受け取ってセッション状態に保存
+    if result:
+        for i, item in enumerate(MGC_ITEMS):
+            key = f"mgc_{item['key']}"
+            if 'scores' in result:
+                st.session_state.scores[key] = result['scores'][i]
 
     st.markdown("---")
     col1, col2 = st.columns(2)
@@ -433,47 +389,26 @@ elif st.session_state.current_scale == 1:
 # ============================================================================
 
 elif st.session_state.current_scale == 2:
-    # スクロールトップ用のJavaScript
-    st.markdown("""<script>
-        window.scrollTo(0, 0);
-        document.body.scrollTop = 0;
-        document.documentElement.scrollTop = 0;
-    </script>""", unsafe_allow_html=True)
-
     st.header("MGQOL-15r (0-30点)")
 
-    # タップ入力セクション風のレイアウト
-    for idx, item in enumerate(MGQOL_ITEMS):
-        key = f"mgqol_{item['key']}"
-        current_score = get_score(key)
+    # mg-scale-iOS.htmlと完全に同じUIのコンポーネントを表示
+    html_content = create_mg_scale_component(
+        scale_type="mgqol",
+        items=[{
+            "name": item["name"],
+            "key": item["key"]
+        } for item in MGQOL_ITEMS]
+    )
 
-        # 各項目をコンテナで囲む
-        with st.container():
-            # 項目名とスコア表示を横に並べる
-            col1, col2 = st.columns([3, 1])
+    # カスタムコンポーネントを表示（高さを調整）
+    result = components.html(html_content, height=800, scrolling=False)
 
-            with col1:
-                st.markdown(f'<div class="item-name">{item["name"]}</div>', unsafe_allow_html=True)
-
-            with col2:
-                st.markdown(f'<div class="score-display">{current_score}</div>', unsafe_allow_html=True)
-
-            # スコアボタン（0-2）
-            cols = st.columns(3)
-            for i in range(3):
-                with cols[i]:
-                    btn_type = "primary" if current_score == i else "secondary"
-                    if st.button(str(i), key=f"{key}_{i}", type=btn_type, use_container_width=True):
-                        set_score(key, i)
-                        st.rerun()
-
-            # 項目間にスペースを追加
-            if idx < len(MGQOL_ITEMS) - 1:
-                st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
-
-    # 合計点
-    total = calculate_total(MGQOL_ITEMS, 'mgqol')
-    st.markdown(f'<div class="total-display mgqol">合計: {total}/30点</div>', unsafe_allow_html=True)
+    # 結果を受け取ってセッション状態に保存
+    if result:
+        for i, item in enumerate(MGQOL_ITEMS):
+            key = f"mgqol_{item['key']}"
+            if 'scores' in result:
+                st.session_state.scores[key] = result['scores'][i]
 
     st.markdown("---")
     col1, col2 = st.columns(2)
