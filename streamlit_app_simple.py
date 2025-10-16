@@ -54,10 +54,30 @@ st.markdown("""
         margin-bottom: 0.5rem;
     }
 
+    /* カラムを強制的に横並びに（モバイルでも） */
+    div[data-testid="column"] {
+        display: flex !important;
+        flex-direction: column !important;
+    }
+
+    /* カラムの親コンテナを横並びに */
+    div.row-widget.stHorizontal {
+        display: flex !important;
+        flex-direction: row !important;
+        gap: 4px;
+        width: 100%;
+    }
+
+    div.row-widget.stHorizontal > div {
+        flex: 1;
+        min-width: 0;
+    }
+
     /* スコアボタングループのスタイル */
     div.stButton {
         margin: 0;
         padding: 0;
+        width: 100%;
     }
 
     div.stButton > button {
@@ -70,7 +90,8 @@ st.markdown("""
         background-color: white;
         color: #1c1c1e;
         transition: all 0.2s ease;
-        margin: 2px;
+        margin: 0;
+        padding: 8px;
     }
 
     div.stButton > button:hover {
@@ -145,8 +166,31 @@ st.markdown("""
         }
 
         div.stButton > button {
-            height: 55px;
-            font-size: 1.1em;
+            height: 50px;
+            font-size: 1em;
+            padding: 4px;
+        }
+
+        div.row-widget.stHorizontal {
+            gap: 3px;
+        }
+
+        .item-label {
+            font-size: 1em;
+            padding: 8px;
+        }
+    }
+
+    /* 超小型デバイス対応 */
+    @media screen and (max-width: 400px) {
+        div.stButton > button {
+            height: 45px;
+            font-size: 0.95em;
+            padding: 2px;
+        }
+
+        div.row-widget.stHorizontal {
+            gap: 2px;
         }
     }
 </style>
