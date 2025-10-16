@@ -148,60 +148,31 @@ st.markdown("""
         color: white !important;
     }
 
-    /* プライマリボタン - 選択状態 */
-    div.stButton > button[kind="primary"] {
-        height: 48px;
-        font-size: 1rem;
-        font-weight: 600;
-        border: none;
+    /* 選択されたボタンのスタイル - IDベースのアプローチ */
+    /* プライマリボタンのベースクラスを使用 */
+    .stButton > button {
+        transition: all 0.3s ease;
     }
 
-    /* ADL選択ボタン（青） */
-    .adl-section div.stButton > button[kind="primary"] {
-        background: #007aff !important;
+    /* ADLセクション内のプライマリボタン（選択状態）を青色に */
+    .adl-selected {
+        background-color: #007aff !important;
         color: white !important;
         border: 2px solid #007aff !important;
     }
 
-    .adl-section div.stButton > button[kind="primary"]:hover {
-        background: #0051d5 !important;
-    }
-
-    /* MGC選択ボタン（緑） */
-    .mgc-section div.stButton > button[kind="primary"] {
-        background: #34c759 !important;
+    /* MGCセクション内のプライマリボタン（選択状態）を緑色に */
+    .mgc-selected {
+        background-color: #34c759 !important;
         color: white !important;
         border: 2px solid #34c759 !important;
     }
 
-    .mgc-section div.stButton > button[kind="primary"]:hover {
-        background: #28a745 !important;
-    }
-
-    /* MGQOL選択ボタン（紫） */
-    .mgqol-section div.stButton > button[kind="primary"] {
-        background: #af52de !important;
+    /* MGQOLセクション内のプライマリボタン（選択状態）を紫色に */
+    .mgqol-selected {
+        background-color: #af52de !important;
         color: white !important;
         border: 2px solid #af52de !important;
-    }
-
-    .mgqol-section div.stButton > button[kind="primary"]:hover {
-        background: #9437c3 !important;
-    }
-
-    /* セカンダリボタン - 未選択状態 */
-    div.stButton > button[kind="secondary"] {
-        background: white;
-        color: #666;
-        border: 2px solid #e5e5ea;
-        height: 48px;
-        font-size: 1rem;
-        font-weight: 600;
-    }
-
-    div.stButton > button[kind="secondary"]:hover {
-        background: #f5f5f5;
-        border-color: #ccc;
     }
 
     /* 合計表示 */
@@ -267,6 +238,64 @@ st.markdown("""
 <script>
     // ページロード時に画面上部にスクロール
     window.scrollTo(0, 0);
+
+    // 選択されたボタンに色を適用する
+    function applyButtonColors() {
+        // すべてのボタンからクラスを削除
+        document.querySelectorAll('.adl-selected, .mgc-selected, .mgqol-selected').forEach(btn => {
+            btn.classList.remove('adl-selected', 'mgc-selected', 'mgqol-selected');
+        });
+
+        // ADLセクション内のボタン
+        const adlSection = document.querySelector('.adl-section');
+        if (adlSection) {
+            adlSection.querySelectorAll('button').forEach(button => {
+                // ボタンのテキスト色で選択状態を判定（白 = 選択済み）
+                const computedStyle = window.getComputedStyle(button);
+                const isSelected = computedStyle.color === 'rgb(255, 255, 255)' ||
+                                 computedStyle.color === 'white';
+
+                if (isSelected) {
+                    button.classList.add('adl-selected');
+                }
+            });
+        }
+
+        // MGCセクション内のボタン
+        const mgcSection = document.querySelector('.mgc-section');
+        if (mgcSection) {
+            mgcSection.querySelectorAll('button').forEach(button => {
+                const computedStyle = window.getComputedStyle(button);
+                const isSelected = computedStyle.color === 'rgb(255, 255, 255)' ||
+                                 computedStyle.color === 'white';
+
+                if (isSelected) {
+                    button.classList.add('mgc-selected');
+                }
+            });
+        }
+
+        // MGQOLセクション内のボタン
+        const mgqolSection = document.querySelector('.mgqol-section');
+        if (mgqolSection) {
+            mgqolSection.querySelectorAll('button').forEach(button => {
+                const computedStyle = window.getComputedStyle(button);
+                const isSelected = computedStyle.color === 'rgb(255, 255, 255)' ||
+                                 computedStyle.color === 'white';
+
+                if (isSelected) {
+                    button.classList.add('mgqol-selected');
+                }
+            });
+        }
+    }
+
+    // DOMが読み込まれたら実行
+    document.addEventListener('DOMContentLoaded', applyButtonColors);
+
+    // Streamlitが再描画した際にも実行
+    const observer = new MutationObserver(applyButtonColors);
+    observer.observe(document.body, { childList: true, subtree: true });
 </script>
 """, unsafe_allow_html=True)
 
