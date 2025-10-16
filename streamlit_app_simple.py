@@ -30,7 +30,7 @@ st.markdown("""
 <style>
     /* モバイル対応: ボタンを大きく + 楽しいエフェクト */
     div.stButton > button {
-        transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        transition: all 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         position: relative;
         overflow: visible;
         min-height: 60px;
@@ -46,16 +46,19 @@ st.markdown("""
     }
 
     div.stButton > button:active {
-        animation: bouncePress 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        animation: bouncePress 1.2s cubic-bezier(0.68, -0.55, 0.265, 1.55);
         transform: scale(0.92);
     }
 
-    /* ぽわわんエフェクト */
+    /* ぽわわんエフェクト（長めのアニメーション）*/
     @keyframes bouncePress {
         0% { transform: scale(1); }
-        25% { transform: scale(0.85); }
-        50% { transform: scale(1.1); }
-        75% { transform: scale(0.95); }
+        15% { transform: scale(0.85); }
+        30% { transform: scale(1.15); }
+        45% { transform: scale(0.95); }
+        60% { transform: scale(1.05); }
+        75% { transform: scale(0.98); }
+        90% { transform: scale(1.02); }
         100% { transform: scale(1); }
     }
 
@@ -162,53 +165,12 @@ st.markdown("""
             }
         }
 
-        if (scrollAction === 'top') {
+        if (scrollAction === 'top' || scrollAction === 'results') {
+            // 常に一番上に強制スクロール
             setTimeout(() => {
-                // 具体的なヘッダーを探してスクロール
-                const headers = document.querySelectorAll('h2');
-                let targetHeader = null;
-
-                for (let h of headers) {
-                    if (h.textContent.includes('MG Composite') ||
-                        h.textContent.includes('MGQOL-15r')) {
-                        targetHeader = h;
-                        break;
-                    }
-                }
-
-                if (targetHeader) {
-                    targetHeader.scrollIntoView({ behavior: 'smooth', block: 'start' });
-                } else {
-                    window.scrollTo({ top: 0, behavior: 'smooth' });
-                }
+                window.scrollTo({ top: 0, behavior: 'smooth' });
                 sessionStorage.removeItem('scrollPosition');
-            }, 200);
-        } else if (scrollAction === 'results') {
-            setTimeout(() => {
-                // 「MM or better」または「non MM」を探す
-                const allElements = document.body.getElementsByTagName('*');
-                let targetElement = null;
-
-                for (let el of allElements) {
-                    const text = el.textContent || '';
-                    if (text.includes('MM or better') || text.includes('non MM')) {
-                        // 親要素を探して、見出しの近くを探す
-                        targetElement = el;
-                        break;
-                    }
-                }
-
-                if (targetElement) {
-                    // 少し上にオフセットしてスクロール
-                    const yOffset = -20;
-                    const y = targetElement.getBoundingClientRect().top + window.pageYOffset + yOffset;
-                    window.scrollTo({ top: y, behavior: 'smooth' });
-                } else {
-                    // フォールバック: ページの下半分にスクロール
-                    window.scrollTo({ top: document.body.scrollHeight * 0.6, behavior: 'smooth' });
-                }
-                sessionStorage.removeItem('scrollPosition');
-            }, 400);
+            }, 100);
         } else if (!scrollAction) {
             // 通常はスクロール位置を保持
             const scrollPosition = sessionStorage.getItem('scrollPosition');
@@ -300,11 +262,11 @@ def calculate_total(items, prefix):
 # ============================================================================
 
 if 'current_scale' not in st.session_state:
-    st.session_state.current_scale = 0  # 0: ADL, 1: MGC, 2: MGQOL
+    st.session_state.current_scale = 0  # 0: ADL, 1: MGC, 2: MGQOL, 3: Results
 
 def next_scale():
     """次のスケールに進む"""
-    if st.session_state.current_scale < 2:
+    if st.session_state.current_scale < 3:
         st.session_state.current_scale += 1
         st.session_state.scroll_action = 'top'
         st.rerun()
@@ -336,8 +298,8 @@ elif st.session_state.scroll_action == 'results':
     st.session_state.scroll_action = None
 
 # 進捗インジケーター
-progress_labels = ["MG-ADL", "MG Composite", "MGQOL-15r"]
-cols = st.columns(3)
+progress_labels = ["MG-ADL", "MG Composite", "MGQOL-15r", "予測結果"]
+cols = st.columns(4)
 for i, label in enumerate(progress_labels):
     with cols[i]:
         if i == st.session_state.current_scale:
@@ -452,13 +414,174 @@ elif st.session_state.current_scale == 2:
 
     st.markdown("---")
 
-    # ナビゲーションと予測ボタン
+    # ナビゲーションボタン
     col1, col2, col3 = st.columns([1, 1, 1])
     with col1:
         if st.button("← MGCへ戻る", use_container_width=True):
             prev_scale()
     with col3:
-        predict_btn = st.button("予測実行", type="primary", use_container_width=True)
+        if st.button("結果へ →", type="primary", use_container_width=True):
+            next_scale()
+
+# ============================================================================
+# 予測結果タブ
+# ============================================================================
+
+elif st.session_state.current_scale == 3:
+    st.header("予測結果")
+
+    # 予測を自動実行（まだ実行されていない場合）
+    if st.session_state.prediction_results is None:
+        with st.spinner("予測中..."):
+            try:
+                check_required_files()
+
+                if st.session_state.predictor is None:
+                    st.session_state.predictor = MGPredictor()
+                    st.session_state.predictor.load_resources()
+
+                predictor = st.session_state.predictor
+
+                # UIスコアをDataFrameに変換
+                patient_df = predictor.convert_ui_scores_to_dataframe(st.session_state.scores)
+
+                # モジュールスコアに変換
+                module_scores = predictor.transform_to_modules(patient_df)
+
+                # 予測実行
+                results = predictor.predict(module_scores)
+
+                # MM/non-MM比較データ取得
+                comparison = predictor.get_mm_comparison_data()
+
+                # 結果をセッションに保存
+                st.session_state.prediction_results = {
+                    **results,
+                    "comparison": comparison
+                }
+                st.rerun()
+
+            except FileNotFoundError as e:
+                st.error(f"❌ ファイルエラー: {e}")
+            except Exception as e:
+                st.error(f"❌ 予測エラー: {e}")
+                st.exception(e)
+
+    # 結果表示
+    if st.session_state.prediction_results is not None:
+        results = st.session_state.prediction_results
+
+        st.markdown("---")
+
+            # 予測結果表示（目立つように）
+            ensemble_prob = results['ensemble']
+            classification = results['classification']
+            total_votes = results['total_mm_votes']
+            total_models = results['total_models']
+        
+            # 確率に応じて色を変更
+            if classification == "MM or better":
+                color = "#4CAF50"  # 緑
+            else:
+                color = "#F44336"  # 赤
+        
+            st.markdown(f"""
+            <div style='background-color: {color}; padding: 20px; border-radius: 10px; text-align: center;'>
+                <h2 style='color: white; margin: 0;'>予測結果</h2>
+                <h1 style='color: white; margin: 10px 0; font-size: 48px;'>{classification}</h1>
+                <h3 style='color: white; margin: 0;'>{total_votes}/3 モデルがMM or better</h3>
+                <p style='color: white; margin: 10px 0; font-size: 14px;'>アンサンブル確率: {ensemble_prob:.1%}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+            # 入力スコア合計の表示
+            st.markdown("### 入力スコア")
+            score_cols = st.columns(3)
+            with score_cols[0]:
+                adl_total = calculate_total(MGADL_ITEMS, 'adl')
+                st.metric("MG-ADL", f"{adl_total}/24")
+            with score_cols[1]:
+                mgc_total = calculate_total(MGC_ITEMS, 'mgc')
+                st.metric("MG Composite", f"{mgc_total}/50")
+            with score_cols[2]:
+                mgqol_total = calculate_total(MGQOL_ITEMS, 'mgqol')
+                st.metric("MGQOL-15r", f"{mgqol_total}/30")
+        
+            # 各モデルの予測詳細
+            st.markdown("### 各モデルの予測")
+        
+            # 詳細情報（折りたたみ）
+            with st.expander("📊 詳細"):
+                st.write("**各モデルの詳細データ:**")
+                for model_name, vote_info in results['model_votes'].items():
+                    st.write(f"**{model_name}**")
+                    st.write(f"  - 確率: {vote_info['probability']:.6f}")
+                    st.write(f"  - カットオフ: {vote_info['cutoff']:.6f}")
+                    st.write(f"  - 判定: {vote_info['prediction']}")
+        
+                st.write("\n**5-fold予測値:**")
+                for model_name, probs in results['predictions'].items():
+                    st.write(f"**{model_name}**: {[f'{p:.4f}' for p in probs]}")
+        
+            cols = st.columns(3)
+            for i, (model_name, vote_info) in enumerate(results['model_votes'].items()):
+                with cols[i]:
+                    prob = vote_info['probability']
+                    cutoff = vote_info['cutoff']
+                    pred = vote_info['prediction']
+        
+                    # カラー: MM or better なら緑、そうでなければ赤
+                    if pred == "MM or better":
+                        badge_color = "#4CAF50"
+                        icon = "✓"
+                    else:
+                        badge_color = "#F44336"
+                        icon = "✗"
+        
+                    st.markdown(f"""
+                    <div style='padding: 15px; border: 2px solid {badge_color}; border-radius: 10px; text-align: center;'>
+                        <div style='font-weight: bold; font-size: 14px; margin-bottom: 5px;'>{model_name}</div>
+                        <div style='font-size: 24px; font-weight: bold; color: {badge_color};'>{prob:.1%}</div>
+                        <div style='font-size: 20px; margin-top: 5px;'>{icon}</div>
+                    </div>
+                    """, unsafe_allow_html=True)
+        
+            # モジュールスコア表示
+            st.markdown("### モジュールスコア")
+        
+            module_df = results['module_scores'].copy()
+            module_df.columns = [col.replace('module ', '').title() for col in module_df.columns]
+        
+            cols = st.columns(4)
+            for i, (col_name, value) in enumerate(module_df.iloc[0].items()):
+                with cols[i]:
+                    st.metric(col_name, f"{value:.4f}")
+        
+            # レーダーチャート
+            st.markdown("### 比較チャート")
+        
+            comparison = results['comparison']
+            patient_scores = results['module_scores'].values[0]
+        
+            fig = create_radar_chart(
+                patient_scores=patient_scores,
+                mm_avg=comparison['mm_avg'],
+                non_mm_avg=comparison['non_mm_avg'],
+                module_names=comparison['module_names'],
+                ensemble_prob=ensemble_prob
+            )
+        
+            st.plotly_chart(fig, use_container_width=True)
+        
+        else:
+            st.info("予測を実行中です...")
+
+    # ナビゲーションボタン
+    st.markdown("---")
+    col1, col2, col3 = st.columns([1, 1, 1])
+    with col1:
+        if st.button("← MGQOLへ戻る", use_container_width=True):
+            prev_scale()
 
 # ============================================================================
 # リセットボタン（全画面共通）
@@ -471,160 +594,6 @@ with col2:
 
 if reset_btn:
     reset_all_scores()
-
-# ============================================================================
-# 予測実行
-# ============================================================================
-
-if 'predict_btn' in locals() and predict_btn:
-    with st.spinner("予測中..."):
-        try:
-            check_required_files()
-
-            if st.session_state.predictor is None:
-                st.session_state.predictor = MGPredictor()
-                st.session_state.predictor.load_resources()
-
-            predictor = st.session_state.predictor
-
-            # UIスコアをDataFrameに変換
-            patient_df = predictor.convert_ui_scores_to_dataframe(st.session_state.scores)
-
-            # モジュールスコアに変換
-            module_scores = predictor.transform_to_modules(patient_df)
-
-            # 予測実行
-            results = predictor.predict(module_scores)
-
-            # MM/non-MM比較データ取得
-            comparison = predictor.get_mm_comparison_data()
-
-            # 結果をセッションに保存
-            st.session_state.prediction_results = {
-                **results,
-                "comparison": comparison
-            }
-            st.session_state.scroll_action = 'results'
-            st.rerun()
-
-        except FileNotFoundError as e:
-            st.error(f"❌ ファイルエラー: {e}")
-        except Exception as e:
-            st.error(f"❌ 予測エラー: {e}")
-            st.exception(e)
-
-# ============================================================================
-# 結果表示
-# ============================================================================
-
-if st.session_state.prediction_results is not None:
-    results = st.session_state.prediction_results
-
-    st.markdown("---")
-    st.markdown('<div id="prediction-results"></div>', unsafe_allow_html=True)
-
-    # 予測結果表示（目立つように）
-    ensemble_prob = results['ensemble']
-    classification = results['classification']
-    total_votes = results['total_mm_votes']
-    total_models = results['total_models']
-
-    # 確率に応じて色を変更
-    if classification == "MM or better":
-        color = "#4CAF50"  # 緑
-    else:
-        color = "#F44336"  # 赤
-
-    st.markdown(f"""
-    <div style='background-color: {color}; padding: 20px; border-radius: 10px; text-align: center;'>
-        <h2 style='color: white; margin: 0;'>予測結果</h2>
-        <h1 style='color: white; margin: 10px 0; font-size: 48px;'>{classification}</h1>
-        <h3 style='color: white; margin: 0;'>{total_votes}/3 モデルがMM or better</h3>
-        <p style='color: white; margin: 10px 0; font-size: 14px;'>アンサンブル確率: {ensemble_prob:.1%}</p>
-    </div>
-    """, unsafe_allow_html=True)
-
-    # 入力スコア合計の表示
-    st.markdown("### 入力スコア")
-    score_cols = st.columns(3)
-    with score_cols[0]:
-        adl_total = calculate_total(MGADL_ITEMS, 'adl')
-        st.metric("MG-ADL", f"{adl_total}/24")
-    with score_cols[1]:
-        mgc_total = calculate_total(MGC_ITEMS, 'mgc')
-        st.metric("MG Composite", f"{mgc_total}/50")
-    with score_cols[2]:
-        mgqol_total = calculate_total(MGQOL_ITEMS, 'mgqol')
-        st.metric("MGQOL-15r", f"{mgqol_total}/30")
-
-    # 各モデルの予測詳細
-    st.markdown("### 各モデルの予測")
-
-    # 詳細情報（折りたたみ）
-    with st.expander("📊 詳細"):
-        st.write("**各モデルの詳細データ:**")
-        for model_name, vote_info in results['model_votes'].items():
-            st.write(f"**{model_name}**")
-            st.write(f"  - 確率: {vote_info['probability']:.6f}")
-            st.write(f"  - カットオフ: {vote_info['cutoff']:.6f}")
-            st.write(f"  - 判定: {vote_info['prediction']}")
-
-        st.write("\n**5-fold予測値:**")
-        for model_name, probs in results['predictions'].items():
-            st.write(f"**{model_name}**: {[f'{p:.4f}' for p in probs]}")
-
-    cols = st.columns(3)
-    for i, (model_name, vote_info) in enumerate(results['model_votes'].items()):
-        with cols[i]:
-            prob = vote_info['probability']
-            cutoff = vote_info['cutoff']
-            pred = vote_info['prediction']
-
-            # カラー: MM or better なら緑、そうでなければ赤
-            if pred == "MM or better":
-                badge_color = "#4CAF50"
-                icon = "✓"
-            else:
-                badge_color = "#F44336"
-                icon = "✗"
-
-            st.markdown(f"""
-            <div style='padding: 15px; border: 2px solid {badge_color}; border-radius: 10px; text-align: center;'>
-                <div style='font-weight: bold; font-size: 14px; margin-bottom: 5px;'>{model_name}</div>
-                <div style='font-size: 24px; font-weight: bold; color: {badge_color};'>{prob:.1%}</div>
-                <div style='font-size: 20px; margin-top: 5px;'>{icon}</div>
-            </div>
-            """, unsafe_allow_html=True)
-
-    # モジュールスコア表示
-    st.markdown("### モジュールスコア")
-
-    module_df = results['module_scores'].copy()
-    module_df.columns = [col.replace('module ', '').title() for col in module_df.columns]
-
-    cols = st.columns(4)
-    for i, (col_name, value) in enumerate(module_df.iloc[0].items()):
-        with cols[i]:
-            st.metric(col_name, f"{value:.4f}")
-
-    # レーダーチャート
-    st.markdown("### 比較チャート")
-
-    comparison = results['comparison']
-    patient_scores = results['module_scores'].values[0]
-
-    fig = create_radar_chart(
-        patient_scores=patient_scores,
-        mm_avg=comparison['mm_avg'],
-        non_mm_avg=comparison['non_mm_avg'],
-        module_names=comparison['module_names'],
-        ensemble_prob=ensemble_prob
-    )
-
-    st.plotly_chart(fig, use_container_width=True)
-
-else:
-    st.info("各スケールのタブから患者データを入力し、「予測実行」ボタンをクリックしてください。")
 
 # ============================================================================
 # フッター
