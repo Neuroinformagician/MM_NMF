@@ -46,9 +46,17 @@ st.markdown("""
 
     /* コンテナ */
     .main .block-container {
-        max-width: 600px;
+        max-width: 100%;
         margin: 0 auto;
-        padding: 1rem;
+        padding: 0.5rem;
+        box-sizing: border-box;
+    }
+
+    @media screen and (min-width: 768px) {
+        .main .block-container {
+            max-width: 600px;
+            padding: 1rem;
+        }
     }
 
     /* 見出し */
@@ -89,14 +97,16 @@ st.markdown("""
     /* スコアボタン */
     div.stButton > button {
         width: 100%;
-        height: 54px;
-        font-size: 1.4rem;
+        height: 52px;
+        font-size: 1.3rem;
         font-weight: 700;
         border-radius: 8px;
         border: 2px solid #ddd;
         background: white;
         color: #333;
         transition: all 0.2s;
+        padding: 0 6px; /* 横パディングを減らす */
+        box-sizing: border-box;
     }
 
     div.stButton > button:hover {
@@ -158,7 +168,7 @@ st.markdown("""
     /* スマホ対応 */
     @media screen and (max-width: 500px) {
         .main .block-container {
-            padding: 0.5rem;
+            padding: 0.3rem;
         }
 
         h1 {
@@ -169,11 +179,6 @@ st.markdown("""
             font-size: 1.2rem;
         }
 
-        div.stButton > button {
-            height: 50px;
-            font-size: 1.3rem;
-        }
-
         .item-name {
             font-size: 0.95rem;
             padding: 8px;
@@ -182,14 +187,6 @@ st.markdown("""
         .total-display {
             font-size: 1.2rem;
             padding: 14px;
-        }
-    }
-
-    /* 極小画面 */
-    @media screen and (max-width: 380px) {
-        div.stButton > button {
-            height: 46px;
-            font-size: 1.2rem;
         }
     }
 
@@ -207,50 +204,99 @@ st.markdown("""
         max-width: 100vw !important;
     }
 
-    /* カラムの隙間調整 */
-    div[data-testid="column"] {
-        padding: 0 2px;
-    }
-
-    /* 強制的に横並びレイアウト */
+    /* 強制的に横並びレイアウト - 画面幅に収める */
     div[data-testid="stHorizontalBlock"] {
         display: flex !important;
         flex-direction: row !important;
         flex-wrap: nowrap !important;
-        gap: 4px;
-        width: 100% !important;
+        gap: 2px !important;
+        width: calc(100% + 0.5rem) !important; /* コンテナのパディング分を補正 */
+        margin-left: -0.25rem !important;
+        margin-right: -0.25rem !important;
+        padding: 0 !important;
+        box-sizing: border-box !important;
     }
 
-    /* カラムを横並びに固定 */
+    /* カラムを均等に分割、パディングを最小化 */
     div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
         flex: 1 1 0 !important;
         min-width: 0 !important;
-        max-width: none !important;
-    }
-
-    /* スマホでもカラムを横並び維持 */
-    @media screen and (max-width: 640px) {
-        div[data-testid="stHorizontalBlock"] {
-            display: flex !important;
-            flex-direction: row !important;
-        }
-
-        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-            flex: 1 1 0 !important;
-            min-width: 0 !important;
-        }
+        padding: 0 2px !important;
+        margin: 0 !important;
+        box-sizing: border-box !important;
     }
 
     /* ボタンコンテナの調整 */
     .stButton {
         width: 100%;
+        padding: 0 !important;
+        margin: 0 !important;
     }
 
-    /* ボタンのフォントサイズ調整（小画面） */
+    /* スマホでのボタン調整 */
+    @media screen and (max-width: 640px) {
+        /* コンテナの幅を画面幅いっぱいに */
+        .main .block-container {
+            padding: 0.25rem !important;
+        }
+
+        /* 横並びレイアウトを画面幅に合わせる */
+        div[data-testid="stHorizontalBlock"] {
+            width: calc(100% + 0.5rem) !important;
+            margin-left: -0.25rem !important;
+            margin-right: -0.25rem !important;
+            gap: 1px !important;
+        }
+
+        /* ボタンのサイズとフォント調整 */
+        div.stButton > button {
+            height: 46px !important;
+            font-size: 1.15rem !important;
+            font-weight: 600 !important;
+            padding: 0 3px !important;
+            min-width: 0 !important;
+            width: 100% !important;
+            border: 1px solid #ddd !important; /* ボーダーを細く */
+        }
+
+        /* カラムをさらにタイトに */
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            padding: 0 1px !important;
+        }
+    }
+
+    /* 極小画面での調整 */
     @media screen and (max-width: 380px) {
         div.stButton > button {
-            font-size: 1.1rem;
-            padding: 0 2px;
+            height: 44px !important;
+            font-size: 1.05rem !important;
+            padding: 0 2px !important;
+        }
+
+        /* さらにギャップを減らす */
+        div[data-testid="stHorizontalBlock"] {
+            gap: 0.5px !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            padding: 0 0.5px !important;
+        }
+    }
+
+    /* iPhone SE等の小画面対応 */
+    @media screen and (max-width: 320px) {
+        div.stButton > button {
+            height: 40px !important;
+            font-size: 0.95rem !important;
+            padding: 0 1px !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] {
+            gap: 0 !important;
+        }
+
+        div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
+            padding: 0 !important;
         }
     }
 </style>
