@@ -89,9 +89,19 @@ st.markdown("""
         color: #333;
         background: white;
         padding: 10px;
-        margin-bottom: 8px;
         border-radius: 8px;
         border-left: 4px solid #007aff;
+    }
+
+    /* スコア表示 */
+    .score-display {
+        font-size: 2rem;
+        font-weight: 700;
+        text-align: center;
+        padding: 5px;
+        border-radius: 8px;
+        background-color: #f2f2f7;
+        color: #007aff;
     }
 
     /* スコアボタン */
@@ -198,272 +208,16 @@ st.markdown("""
         border: 1px solid #e0e0e0;
     }
 
-    /* 横スクロール防止 - すべての要素に適用 */
-    * {
-        max-width: 100vw !important;
-    }
-
-    html, body {
+    /* 横スクロール防止 */
+    html, body, .stApp, .main {
         overflow-x: hidden !important;
         max-width: 100vw !important;
-        width: 100vw !important;
-        margin: 0 !important;
-        padding: 0 !important;
-    }
-
-    /* Streamlitのすべてのコンテナを制限 */
-    .stApp,
-    .main,
-    section.main,
-    div.block-container,
-    div.element-container,
-    div.stMarkdown,
-    div.row-widget {
-        overflow-x: hidden !important;
-        max-width: 100vw !important;
-        margin: 0 !important;
-    }
-
-    /* ビューポート幅を使用して確実に画面内に収める */
-    section.main > div.block-container {
-        width: 100vw !important;
-        max-width: 100vw !important;
-        padding-left: 0.5rem !important;
-        padding-right: 0.5rem !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 強制的に横並びレイアウト - ビューポート幅基準 */
-    div[data-testid="stHorizontalBlock"] {
-        display: flex !important;
-        flex-direction: row !important;
-        flex-wrap: nowrap !important;
-        gap: 0 !important;
-        width: calc(100vw - 16px) !important; /* ビューポート幅からパディング分を引く */
-        max-width: calc(100vw - 16px) !important;
-        margin: 0 !important;
-        padding: 0 !important;
-        box-sizing: border-box !important;
-        position: relative !important;
-        left: 0 !important;
-        right: 0 !important;
-    }
-
-    /* すべてのカラムに共通の設定 */
-    div[data-testid="stHorizontalBlock"] > div[data-testid="column"] {
-        flex: 1 1 0 !important;
-        min-width: 0 !important;
-        padding: 0 1px !important;
-        margin: 0 !important;
-        box-sizing: border-box !important;
-    }
-
-    /* 4カラムレイアウト - ビューポート幅を4分割 */
-    div[data-testid="stHorizontalBlock"]:has(> div:nth-child(4)) > div[data-testid="column"] {
-        width: calc((100vw - 16px) / 4) !important;
-        max-width: calc((100vw - 16px) / 4) !important;
-        min-width: calc((100vw - 16px) / 4) !important;
-        flex: none !important;
-    }
-
-    /* 3カラムレイアウト - ビューポート幅を3分割 */
-    div[data-testid="stHorizontalBlock"]:has(> div:nth-child(3)):not(:has(> div:nth-child(4))) > div[data-testid="column"] {
-        width: calc((100vw - 16px) / 3) !important;
-        max-width: calc((100vw - 16px) / 3) !important;
-        min-width: calc((100vw - 16px) / 3) !important;
-        flex: none !important;
-    }
-
-    /* 2カラムレイアウト - ビューポート幅を2分割 */
-    div[data-testid="stHorizontalBlock"]:has(> div:nth-child(2)):not(:has(> div:nth-child(3))) > div[data-testid="column"] {
-        width: calc((100vw - 16px) / 2) !important;
-        max-width: calc((100vw - 16px) / 2) !important;
-        min-width: calc((100vw - 16px) / 2) !important;
-        flex: none !important;
-    }
-
-    /* ボタンコンテナの調整 */
-    .stButton {
-        width: 100%;
-        padding: 0 !important;
-        margin: 0 !important;
-    }
-
-    /* スマホでのボタン調整 */
-    @media screen and (max-width: 640px) {
-        /* コンテナの幅を画面幅いっぱいに */
-        section.main > div.block-container {
-            padding-left: 8px !important;
-            padding-right: 8px !important;
-            width: 100vw !important;
-        }
-
-        /* 横並びレイアウトを画面幅100%に */
-        div[data-testid="stHorizontalBlock"] {
-            width: calc(100vw - 16px) !important;
-            max-width: calc(100vw - 16px) !important;
-        }
-
-        /* 4カラムレイアウト - モバイル */
-        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(4)) > div[data-testid="column"] {
-            width: calc((100vw - 16px) / 4) !important;
-            max-width: calc((100vw - 16px) / 4) !important;
-            min-width: calc((100vw - 16px) / 4) !important;
-            padding: 0 0.5px !important;
-        }
-
-        /* 3カラムレイアウト - モバイル */
-        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(3)):not(:has(> div:nth-child(4))) > div[data-testid="column"] {
-            width: calc((100vw - 16px) / 3) !important;
-            max-width: calc((100vw - 16px) / 3) !important;
-            min-width: calc((100vw - 16px) / 3) !important;
-            padding: 0 0.5px !important;
-        }
-
-        /* ボタンのサイズとフォント調整 */
-        div.stButton > button {
-            height: 48px !important;
-            font-size: 1.2rem !important;
-            font-weight: 600 !important;
-            padding: 0 2px !important;
-            min-width: 0 !important;
-            width: 100% !important;
-            border: 1px solid #ddd !important;
-        }
-    }
-
-    /* 極小画面での調整 */
-    @media screen and (max-width: 400px) {
-        /* パディングをさらに減らす */
-        section.main > div.block-container {
-            padding-left: 4px !important;
-            padding-right: 4px !important;
-        }
-
-        /* 横並びレイアウト調整 */
-        div[data-testid="stHorizontalBlock"] {
-            width: calc(100vw - 8px) !important;
-            max-width: calc(100vw - 8px) !important;
-        }
-
-        /* 4カラムレイアウト - 極小画面 */
-        div[data-testid="stHorizontalBlock"]:has(> div:nth-child(4)) > div[data-testid="column"] {
-            width: calc((100vw - 8px) / 4) !important;
-            max-width: calc((100vw - 8px) / 4) !important;
-            min-width: calc((100vw - 8px) / 4) !important;
-            padding: 0 !important;
-        }
-
-        /* ボタン調整 */
-        div.stButton > button {
-            height: 44px !important;
-            font-size: 1.05rem !important;
-            padding: 0 1px !important;
-        }
     }
 </style>
 
 <script>
-    // ページロード時に必ず画面上部にスクロール
-    (function() {
-        // 複数の方法でスクロールを試みる
-        function scrollToTop() {
-            window.scrollTo(0, 0);
-            document.body.scrollTop = 0;
-            document.documentElement.scrollTop = 0;
-
-            // Streamlitのメインコンテナもスクロール
-            const mainContainer = document.querySelector('.main');
-            if (mainContainer) {
-                mainContainer.scrollTop = 0;
-            }
-
-            // stAppコンテナもスクロール
-            const stApp = document.querySelector('.stApp');
-            if (stApp) {
-                stApp.scrollTop = 0;
-            }
-        }
-
-        // JavaScriptで強制的にレイアウトを修正
-        function fixButtonLayout() {
-            const vw = Math.max(document.documentElement.clientWidth || 0, window.innerWidth || 0);
-            const blocks = document.querySelectorAll('div[data-testid="stHorizontalBlock"]');
-
-            blocks.forEach(block => {
-                const columns = block.querySelectorAll('div[data-testid="column"]');
-                const columnCount = columns.length;
-
-                if (columnCount > 0) {
-                    // ブロック全体の幅を画面幅に設定
-                    block.style.width = `${vw - 16}px`;
-                    block.style.maxWidth = `${vw - 16}px`;
-                    block.style.display = 'flex';
-                    block.style.flexDirection = 'row';
-                    block.style.gap = '0';
-                    block.style.padding = '0';
-                    block.style.margin = '0';
-
-                    // 各カラムの幅を均等に設定
-                    columns.forEach(col => {
-                        const width = (vw - 16) / columnCount;
-                        col.style.width = `${width}px`;
-                        col.style.maxWidth = `${width}px`;
-                        col.style.minWidth = `${width}px`;
-                        col.style.flex = 'none';
-                        col.style.padding = '0 1px';
-                        col.style.margin = '0';
-
-                        // ボタンも調整
-                        const button = col.querySelector('button');
-                        if (button) {
-                            button.style.width = '100%';
-                            button.style.padding = '0 2px';
-                        }
-                    });
-                }
-            });
-        }
-
-        // 即座に実行
-        scrollToTop();
-        fixButtonLayout();
-
-        // DOMContentLoaded時にも実行
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', () => {
-                scrollToTop();
-                fixButtonLayout();
-            });
-        } else {
-            scrollToTop();
-            fixButtonLayout();
-        }
-
-        // ページロード完了時にも実行
-        window.addEventListener('load', () => {
-            scrollToTop();
-            fixButtonLayout();
-        });
-
-        // 少し遅延して再実行（Streamlitの動的レンダリングに対応）
-        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 10);
-        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 50);
-        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 100);
-        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 200);
-        setTimeout(() => { scrollToTop(); fixButtonLayout(); }, 500);
-
-        // MutationObserverで変更を監視
-        const observer = new MutationObserver(() => {
-            fixButtonLayout();
-        });
-
-        observer.observe(document.body, {
-            childList: true,
-            subtree: true
-        });
-    })();
+    // ページロード時に画面上部にスクロール
+    window.scrollTo(0, 0);
 </script>
 """, unsafe_allow_html=True)
 
@@ -572,24 +326,37 @@ if st.session_state.current_scale == 0:
 
     st.header("MG-ADL (0-24点)")
 
-    for item in MGADL_ITEMS:
+    # タップ入力セクション風のレイアウト
+    for idx, item in enumerate(MGADL_ITEMS):
         key = f"adl_{item['key']}"
         current_score = get_score(key)
 
-        # 項目名
-        marker = " (→MGC自動反映)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-        st.markdown(f'<div class="item-name">{item["name"]}{marker}</div>', unsafe_allow_html=True)
+        # 各項目をコンテナで囲む
+        with st.container():
+            # 項目名とスコア表示を横に並べる
+            col1, col2 = st.columns([3, 1])
 
-        # スコアボタン（0-3）
-        cols = st.columns(4)
-        for i in range(4):
-            with cols[i]:
-                btn_type = "primary" if current_score == i else "secondary"
-                if st.button(str(i), key=f"{key}_{i}", type=btn_type, use_container_width=True):
-                    set_score(key, i)
-                    if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
-                        sync_adl_to_mgc()
-                    st.rerun()
+            with col1:
+                marker = " (→MGC自動反映)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+                st.markdown(f'<div class="item-name">{item["name"]}{marker}</div>', unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f'<div class="score-display">{current_score}</div>', unsafe_allow_html=True)
+
+            # スコアボタンを横並びで配置
+            cols = st.columns(4)
+            for i in range(4):
+                with cols[i]:
+                    btn_type = "primary" if current_score == i else "secondary"
+                    if st.button(str(i), key=f"{key}_{i}", type=btn_type, use_container_width=True):
+                        set_score(key, i)
+                        if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration']:
+                            sync_adl_to_mgc()
+                        st.rerun()
+
+            # 項目間にスペースを追加
+            if idx < len(MGADL_ITEMS) - 1:
+                st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
 
     # 合計点
     total = calculate_total(MGADL_ITEMS, 'adl')
@@ -615,24 +382,38 @@ elif st.session_state.current_scale == 1:
 
     st.header("MG Composite (0-50点)")
 
-    for item in MGC_ITEMS:
+    # タップ入力セクション風のレイアウト
+    for idx, item in enumerate(MGC_ITEMS):
         key = f"mgc_{item['key']}"
         current_score = get_score(key)
+        current_value = item['values'][current_score]
 
-        # 項目名
-        marker = " (ADLから自動)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
-        desc = f" - {item['description']}" if item.get('description') else ""
-        st.markdown(f'<div class="item-name">{item["name"]}{marker}{desc}</div>', unsafe_allow_html=True)
+        # 各項目をコンテナで囲む
+        with st.container():
+            # 項目名とスコア表示を横に並べる
+            col1, col2 = st.columns([3, 1])
 
-        # スコアボタン（実際の値）
-        values = item['values']
-        cols = st.columns(len(values))
-        for i, val in enumerate(values):
-            with cols[i]:
-                btn_type = "primary" if current_score == i else "secondary"
-                if st.button(str(val), key=f"{key}_{i}", type=btn_type, use_container_width=True):
-                    set_score(key, i)
-                    st.rerun()
+            with col1:
+                marker = " (ADLから自動)" if item['key'] in ['speech', 'chewing', 'swallowing', 'respiration'] else ""
+                desc = f" - {item['description']}" if item.get('description') else ""
+                st.markdown(f'<div class="item-name">{item["name"]}{marker}{desc}</div>', unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f'<div class="score-display">{current_value}</div>', unsafe_allow_html=True)
+
+            # スコアボタン（実際の値）
+            values = item['values']
+            cols = st.columns(len(values))
+            for i, val in enumerate(values):
+                with cols[i]:
+                    btn_type = "primary" if current_score == i else "secondary"
+                    if st.button(str(val), key=f"{key}_{i}", type=btn_type, use_container_width=True):
+                        set_score(key, i)
+                        st.rerun()
+
+            # 項目間にスペースを追加
+            if idx < len(MGC_ITEMS) - 1:
+                st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
 
     # 合計点
     total = calculate_total(MGC_ITEMS, 'mgc')
@@ -661,21 +442,34 @@ elif st.session_state.current_scale == 2:
 
     st.header("MGQOL-15r (0-30点)")
 
-    for item in MGQOL_ITEMS:
+    # タップ入力セクション風のレイアウト
+    for idx, item in enumerate(MGQOL_ITEMS):
         key = f"mgqol_{item['key']}"
         current_score = get_score(key)
 
-        # 項目名
-        st.markdown(f'<div class="item-name">{item["name"]}</div>', unsafe_allow_html=True)
+        # 各項目をコンテナで囲む
+        with st.container():
+            # 項目名とスコア表示を横に並べる
+            col1, col2 = st.columns([3, 1])
 
-        # スコアボタン（0-2）
-        cols = st.columns(3)
-        for i in range(3):
-            with cols[i]:
-                btn_type = "primary" if current_score == i else "secondary"
-                if st.button(str(i), key=f"{key}_{i}", type=btn_type, use_container_width=True):
-                    set_score(key, i)
-                    st.rerun()
+            with col1:
+                st.markdown(f'<div class="item-name">{item["name"]}</div>', unsafe_allow_html=True)
+
+            with col2:
+                st.markdown(f'<div class="score-display">{current_score}</div>', unsafe_allow_html=True)
+
+            # スコアボタン（0-2）
+            cols = st.columns(3)
+            for i in range(3):
+                with cols[i]:
+                    btn_type = "primary" if current_score == i else "secondary"
+                    if st.button(str(i), key=f"{key}_{i}", type=btn_type, use_container_width=True):
+                        set_score(key, i)
+                        st.rerun()
+
+            # 項目間にスペースを追加
+            if idx < len(MGQOL_ITEMS) - 1:
+                st.markdown("<div style='margin-bottom: 1rem;'></div>", unsafe_allow_html=True)
 
     # 合計点
     total = calculate_total(MGQOL_ITEMS, 'mgqol')
