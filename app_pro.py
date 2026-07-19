@@ -228,20 +228,22 @@ html, body, [data-testid="stAppViewContainer"] {
     display: inline-block;
 }
 
-/* ---------- Preset buttons ---------- */
-div[data-testid="column"] .stButton > button {
-    border-radius: 12px;
-    font-weight: 700;
-    border: 1px solid rgba(255,255,255,0.14);
-    background: rgba(255,255,255,0.05);
-    color: #e6ebf5;
+/* ---------- Preset buttons (secondary) ---------- */
+div[data-testid="column"] .stButton > button,
+.stButton > button[kind="secondary"] {
+    border-radius: 12px !important;
+    font-weight: 700 !important;
+    border: 1px solid rgba(255,255,255,0.16) !important;
+    background: rgba(255,255,255,0.06) !important;
+    color: #e6ebf5 !important;
     transition: all 0.15s ease;
-    padding: 0.55rem 0.6rem;
+    padding: 0.55rem 0.6rem !important;
 }
-div[data-testid="column"] .stButton > button:hover {
-    border-color: rgba(45, 212, 191, 0.55);
-    background: rgba(45, 212, 191, 0.10);
-    color: #5eead4;
+div[data-testid="column"] .stButton > button:hover,
+.stButton > button[kind="secondary"]:hover {
+    border-color: rgba(45, 212, 191, 0.55) !important;
+    background: rgba(45, 212, 191, 0.12) !important;
+    color: #5eead4 !important;
     transform: translateY(-1px);
 }
 
