@@ -126,10 +126,10 @@ def main():
     c1, c2 = st.columns([1, 1])
     with c1:
         if ensemble_mm:
-            st.success("### ✅ MM or better（治療反応性 良好）")
+            st.success("### ✅ MM")
         else:
-            st.warning("### ⚠️ non-MM（治療反応性 不良）")
-        st.metric("平均確率（MM or better）", f"{ensemble_prob:.1%}")
+            st.warning("### ⚠️ non-MM")
+        st.metric("平均確率", f"{ensemble_prob:.1%}")
         st.caption(f"MM判定したモデル数: {votes} / 4")
 
         st.markdown("#### モデル別の判定")
@@ -137,7 +137,7 @@ def main():
             {
                 "モデル": list(results.keys()),
                 "確率": [f"{r['prob']:.1%}" for r in results.values()],
-                "判定": ["MM or better" if r["label"] else "non-MM" for r in results.values()],
+                "判定": ["MM" if r["label"] else "non-MM" for r in results.values()],
             }
         )
         st.dataframe(table, hide_index=True, use_container_width=True)
