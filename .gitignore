@@ -2,6 +2,9 @@
 *.tmp           # 一時ファイル
 *.DS_Store      # macOSシステムファイル
 
+__pycache__/    # Python バイトコードキャッシュ
+*.pyc           # コンパイル済み Python ファイル
+
 data/           # data フォルダ全体
 cache/          # キャッシュフォルダ
 
