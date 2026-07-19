@@ -63,6 +63,8 @@ def load_artifacts():
         nmf = pickle.load(f)
     with open("./out/optimal_cutoffs.pkl", "rb") as f:
         cutoffs = pickle.load(f)
+    with open("./out/group_statistics.pkl", "rb") as f:
+        group_stats = pickle.load(f)
 
     folds = {}
     for prefix in MODELS:
@@ -72,7 +74,7 @@ def load_artifacts():
 
     # スライダーの上限は学習データで観測された各項目の最大値を使う
     item_max = {col: int(round(m)) for col, m in zip(feature_cols, scaler.data_max_)}
-    return feature_cols, scaler, nmf, cutoffs, folds, item_max
+    return feature_cols, scaler, nmf, cutoffs, folds, item_max, group_stats
 
 
 def predict(scores, feature_cols, scaler, nmf, cutoffs, folds):
@@ -96,7 +98,7 @@ def main():
         "（MM or better）を予測します。"
     )
 
-    feature_cols, scaler, nmf, cutoffs, folds, item_max = load_artifacts()
+    feature_cols, scaler, nmf, cutoffs, folds, item_max, group_stats = load_artifacts()
 
     # ---- 入力フォーム -------------------------------------------------------
     st.markdown("### 📝 患者スコア入力")
@@ -141,12 +143,43 @@ def main():
         st.dataframe(table, hide_index=True, use_container_width=True)
 
     with c2:
-        st.markdown("#### NMFモジュール値")
-        fig = go.Figure(
-            go.Bar(x=MODULES, y=[round(v, 3) for v in W], marker_color="#667eea")
+        st.markdown("#### NMFモジュール値（ダイヤチャート）")
+        nonmm_mean = [group_stats["nonMM_mean"][m] for m in MODULES]
+        patient = [float(v) for v in W]
+
+        # レーダーチャートは始点に戻すため各系列の先頭要素を末尾にも追加する
+        axes = MODULES + [MODULES[0]]
+        fig = go.Figure()
+        fig.add_trace(
+            go.Scatterpolar(
+                r=nonmm_mean + [nonmm_mean[0]],
+                theta=axes,
+                fill="toself",
+                name="non-MM群 平均",
+                line=dict(color="#1f77b4"),
+                fillcolor="rgba(31,119,180,0.25)",
+            )
         )
-        fig.update_layout(height=340, yaxis_title="モジュール値", margin=dict(t=20))
+        fig.add_trace(
+            go.Scatterpolar(
+                r=patient + [patient[0]],
+                theta=axes,
+                fill="toself",
+                name="この患者",
+                line=dict(color="#d62728", width=2),
+                fillcolor="rgba(214,39,40,0.20)",
+            )
+        )
+        rmax = max(max(nonmm_mean), max(patient)) * 1.15 or 0.1
+        fig.update_layout(
+            polar=dict(radialaxis=dict(visible=True, range=[0, rmax])),
+            showlegend=True,
+            height=380,
+            margin=dict(t=30, b=20),
+            legend=dict(orientation="h", yanchor="bottom", y=-0.15),
+        )
         st.plotly_chart(fig, use_container_width=True)
+        st.caption("青の面：non-MM群の平均、赤の面：この患者。外側ほど症状負荷が大きい。")
 
     st.info(
         "判定は各モデルのROC最適カットオフ（Youden指数）に基づきます。"
