@@ -156,8 +156,8 @@ def main():
                 theta=axes,
                 fill="toself",
                 name="non-MM群 平均",
-                line=dict(color="#1f77b4"),
-                fillcolor="rgba(31,119,180,0.25)",
+                line=dict(color="#d62728"),
+                fillcolor="rgba(214,39,40,0.20)",
             )
         )
         fig.add_trace(
@@ -166,8 +166,8 @@ def main():
                 theta=axes,
                 fill="toself",
                 name="この患者",
-                line=dict(color="#d62728", width=2),
-                fillcolor="rgba(214,39,40,0.20)",
+                line=dict(color="#1f77b4", width=2),
+                fillcolor="rgba(31,119,180,0.25)",
             )
         )
         rmax = max(max(nonmm_mean), max(patient)) * 1.15 or 0.1
@@ -179,7 +179,7 @@ def main():
             legend=dict(orientation="h", yanchor="bottom", y=-0.15),
         )
         st.plotly_chart(fig, use_container_width=True)
-        st.caption("青の面：non-MM群の平均、赤の面：この患者。外側ほど症状負荷が大きい。")
+        st.caption("赤の面：non-MM群の平均、青の面：この患者。外側ほど症状負荷が大きい。")
 
     st.info(
         "判定は各モデルのROC最適カットオフ（Youden指数）に基づきます。"
