@@ -50,8 +50,12 @@ python step2_prediction_with_NMF.py
 
 1. Streamlitアプリを起動：
 ```bash
-streamlit run app.py
+streamlit run app_simple.py
 ```
+
+> `app_simple.py` は、学習時に保存した `out/minmax_scaler.pkl` を使って正しく正規化し、
+> NMF → 4モデル×5foldの平均確率 → 各モデルのROC最適カットオフで判定する、
+> シンプルで自己完結した1ファイル版です。
 
 2. ブラウザで自動的に開くWebページで：
    - 各項目のスコアをスライダーで入力

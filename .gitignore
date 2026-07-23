@@ -1,9 +1,16 @@
-*.log           # すべてのログファイル
-*.tmp           # 一時ファイル
-*.DS_Store      # macOSシステムファイル
+# ログ・一時ファイル
+*.log
+*.tmp
+*.DS_Store
 
-data/           # data フォルダ全体
-cache/          # キャッシュフォルダ
+# Python バイトコードキャッシュ
+__pycache__/
+*.pyc
 
+# データ・キャッシュ
+data/
+cache/
+
+# 画像出力
 *.tiff
 fig/
